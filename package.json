@@ -1,0 +1,25 @@
+{
+  "name": "ndid-settlement-report",
+  "version": "0.1.0",
+  "description": "NDID Settlement Report Generator",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "fix": "eslint . --fix",
+    "test": "mocha --reporter=nyan",
+    "xunit": "mocha --reporter=xunit --reporter-options output=results/app.xml"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-chai-expect": "^1.1.1",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-mocha": "^5.0.0",
+    "mocha": "^5.2.0"
+  }
+}

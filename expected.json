@@ -1,0 +1,67 @@
+{
+  "4365101d11298cb3da3faed9329703f74314910edd25f2f29dc174c165a505b4": {
+    "detail": {
+      "request_timeout": 1000000,
+      "requester_node_id": "mhcb_rp_5",
+      "response_list": [
+        {
+          "status": "accept",
+          "ial": 2.3,
+          "private_proof_hash": "Cu2TX10qPVcVy/FnjSeLZdciWCdU7h58gp/8nrVUMpw=",
+          "aal": 2.2,
+          "identity_proof": "[\"oFzv3wPRQR+9GBTHp2AuoLsveaMvYdsHZqmqmwZqzgTbIo74CvIJIL5RjK4nY63hiQz+T7U1AjC1RY0HrVg6480v9kBRKRPgVgGMoT+FL7Az5Xh0YMbLRh3xNYMq+v9JBIQS0pnDyBZ4qGN1D4MSmNxNliYaok/aEF71MhjxnvseM3NINsNeQz8BKqkkSyDCQ1UZNZAQAtzU1O4ynJw6VQseUcu3k/yudqk/6slvTh5c7tlj/IfvnWxmrBfpJSmdfvRdhNKtsBxKM5B4mqKhvI4jP2Siw2vX2AHMZI/Yt7yD9xKjUP40bTKFnXkC8hCRiYdfIT082fKB2xmX628wEA==\",\"CF9Knz6DAB1wySsVi2RHENt6u7lx9htYyMlyguXL1qmzrow+UiIS3j/ZteAg/Zx7DYHvh/7F8f/71VKseOMBRDvRcvyVz22JU3vqOJARBD5X0QDcLbS5/C9R1PPEV0FkHJusRZC9urpAInw517j0/GjWLnsN+o4ulzIEi1cCdhuIqjZsrC2/tcf1J7JkErWpSRXgiZ1Mluq+VNcgLQO5sxpOiRPCoFASgGZgBX6nJV6grY40RbC9aYt/wcMvaNJBHI5/7d1ieqZrL1WN6NCIxcYA7Gt9jZPNWgtvCnIXLN4o53Z5Vk6Hyv8P9WNrwAc45ht+9Wn2OIvyQguJqD0bHQ==\"]",
+          "valid_proof": true,
+          "idp_id": "mock_idp_1",
+          "valid_signature": true,
+          "signature": "iW2pxGI1vcC35ZfKC4puTPZGugl2HczEpik0gm1t5nF6oZIRg9ArcUcZOTMw79diZhOBANwpOQav9xNJoNWoBs6+hB/iLiebhrZtFkphOsA4b0GJaDqJjwCh5mpTXgtNoJqbblsYaiRXaiy8rBRyLdp2dhKJ6VJb3rucA1SWDtiwMwjBXPb5m6o8x80PHWeWEiWjJgfihfftZp218gdcI+KA81wH0HlorPvI/r1fUM5QjBW7xJ/IV7kgvB8G4Y4GQ/aTSnjneARQOXLzgbcRpyXXk0Cu92Jj7LBZerIJ3dYh3okzKqm55Xbbfz8dwjCeFRyvmitEsLQw3AmvQ8h/tw==",
+          "valid_ial": true
+        }
+      ],
+      "min_idp": 1,
+      "timed_out": false,
+      "min_aal": 2.2,
+      "data_request_list": [
+        {
+          "as_id_list": ["mock_as_1"],
+          "answered_as_id_list": ["mock_as_1"],
+          "request_params_hash": "ftD8QLCGpSOxgEK2qSlAQ7SfYOkZWc28PL3p0Y7Si6Q=",
+          "received_data_from_list": ["mock_as_1"],
+          "service_id": "001.cust_info_001",
+          "min_as": 1
+        }
+      ],
+      "special": false,
+      "closed": true,
+      "request_id": "4365101d11298cb3da3faed9329703f74314910edd25f2f29dc174c165a505b4",
+      "min_ial": 2.3,
+      "request_message_hash": "iOpb1SaqqHg09L1kmyI7BjJXWbCra9rd2GgixxUF9ME=",
+      "mode": 3
+    },
+  "steps": [
+    {
+      "height": 2782, 
+      "method": "CreateRequest",
+      "nodeId": "mhcb_rp_5"
+    },
+    {
+      "height": 2790, 
+      "method": "SetDataReceived", 
+      "nodeId": "mhcb_rp_5"
+    },
+    {
+      "height": 2792, 
+      "method": "CloseRequest", 
+      "nodeId": "mhcb_rp_5"
+    },
+    {
+      "height": 2788, 
+      "method": "SignData", 
+      "nodeId": "mock_as_1"
+    },
+    {
+      "height": 2786, 
+      "method": "CreateIdpResponse", 
+      "nodeId": "mock_idp_1"
+    }]
+  }
+}
