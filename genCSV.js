@@ -1,9 +1,11 @@
 // App code here
 
-const value = require('./expected1');
+// const value = require('./expected1');
 const Json2csvParser = require('json2csv').Parser;
 
 const fs = require('fs');
+const mkpath = require('mkpath');
+const { join } = require('path');
 
 const fieldsRpIdp = [
   {
@@ -135,7 +137,7 @@ function genRowsFromRequest(data, reqId) {
     request.height = settlement.height;
     request.as_id = item.as_id;
     request.service_id = item.service_id;
-    request.price = item.as_fee;
+    request.price = item.as_price;
 
     rpAs.push(request);
   });
@@ -170,28 +172,32 @@ function getList(allRows) {
   };
 }
 
-function createFile(csv, fileName) {
-  fs.writeFile(fileName, csv, (err) => {
+function createFile(csv, filePathInOutputDir, outputDirPath) {
+  const filePath = join(outputDirPath, filePathInOutputDir);
+  mkpath.sync(filePath.substring(0, filePath.lastIndexOf('/')));
+  fs.writeFile(filePath, csv, (err) => {
     if (err) throw err;
   });
 }
 
-function genSummaryRpIdp(path, requests, nodeIdList) {
+function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
   const summary = [];
   nodeIdList.map((id) => {
     const filter = requests.filter(item => item.idp_id === id);
     const sum = filter.reduce((prev, curr) => ({
-      rpId: prev.rp_id,
-      idpId: prev.idp_id,
-      idpPrice: prev.price + curr.price,
-    }));
+      rpId: curr.rp_id,
+      idpId: curr.idp_id,
+      idpPrice: prev.idpPrice + curr.price,
+    }), {
+      idpPrice: 0,
+    });
     summary.push(sum);
   });
   const sumCsv = rpIdpSumParser.parse(summary);
-  createFile(sumCsv, path);
+  createFile(sumCsv, path, outputDirPath);
 }
 
-function genSummaryRpAs(path, requests, checkDataList, checkRp) {
+function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
   const summary = [];
   checkDataList.map((checkData) => {
     const filter = requests.filter((item) => {
@@ -211,13 +217,13 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp) {
     summary.push(sumRpAs);
   });
   const sumCsv = rpAsSumParser.parse(summary);
-  createFile(sumCsv, path);
+  createFile(sumCsv, path, outputDirPath);
 }
 
-function genCSV() {
-  const allReqIds = Object.keys(value);
+function genCSV(settlementWithPrice, outputDirPath) {
+  const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
-    .map(reqId => genRowsFromRequest(value, reqId))
+    .map(reqId => genRowsFromRequest(settlementWithPrice, reqId))
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
       rpAs: prev.rpAs.concat(curr.rpAs),
@@ -236,7 +242,7 @@ function genCSV() {
       }
     });
     const csv = rpIdpParser.parse(rpIdp);
-    createFile(csv, `csv/rp-idp/${id}.csv`);
+    createFile(csv, `csv/rp-idp/${id}.csv`, outputDirPath);
 
     const idp = [];
     rpIdp.forEach((item) => {
@@ -244,7 +250,7 @@ function genCSV() {
         idp.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp);
+    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, outputDirPath);
   });
 
   list.idpList.map((id) => {
@@ -255,7 +261,7 @@ function genCSV() {
       }
     });
     const csv = rpIdpParser.parse(idpRp);
-    createFile(csv, `csv/idp-rp/${id}.csv`);
+    createFile(csv, `csv/idp-rp/${id}.csv`, outputDirPath);
 
     const rp = [];
     idpRp.forEach((item) => {
@@ -263,7 +269,7 @@ function genCSV() {
         rp.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp);
+    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, outputDirPath);
   });
 
   list.rpList.map((id) => {
@@ -274,7 +280,7 @@ function genCSV() {
       }
     });
     const csv = rpAsParser.parse(rpAs);
-    createFile(csv, `csv/rp-as/${id}.csv`);
+    createFile(csv, `csv/rp-as/${id}.csv`, outputDirPath);
 
     const asList = [];
     rpAs.forEach((item) => {
@@ -286,7 +292,7 @@ function genCSV() {
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false);
+    genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, outputDirPath);
   });
 
   list.asList.map((id) => {
@@ -297,7 +303,7 @@ function genCSV() {
       }
     });
     const csv = rpAsParser.parse(asRp);
-    createFile(csv, `csv/as-rp/${id}.csv`);
+    createFile(csv, `csv/as-rp/${id}.csv`, outputDirPath);
 
     const asList = [];
     asRp.forEach((item) => {
@@ -309,8 +315,8 @@ function genCSV() {
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true);
+    genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, outputDirPath);
   });
 }
 
-genCSV();
+module.exports.genCSV = genCSV;
