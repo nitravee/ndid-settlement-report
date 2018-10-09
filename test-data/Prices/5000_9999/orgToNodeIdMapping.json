@@ -1,0 +1,34 @@
+{
+  "Bank A": {
+    "idp": ["cimb_idp_7", "cimb_idp_8"]
+  },
+  "Bank B": {
+    "idp": ["kkb_idp_1", "kkb_idp_2"],
+    "as": ["kkb_as_1"]
+  },
+  "Bank C": {
+    "idp": ["mhcb_idp_5", "mhcb_idp_6"],
+    "as": ["mhcb_as_5"]
+  },
+  "Bank D": {
+    "idp": ["mock_idp_1", "mock_idp_2"],
+    "as": ["mock_as_1", "mock_as_2"]
+  },
+  "Bank E": {
+    "as": ["ncb_as_1", "ncb_as_2"]
+  },
+  "Bank F": {
+    "idp": ["scb_idp_5", "scb_idp_6"],
+    "as": ["scb_as_5"]
+  },
+  "Bank G": {
+  },
+  "Bank H": {
+    "idp": ["tbank_idp_4", "tbank_idp_5"],
+    "as": ["tbank_as_3"]
+  },
+  "Bank I": {}, 
+  "Bank J": {},
+  "Bank K": {},
+  "Bank L": {}
+}

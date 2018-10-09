@@ -93,8 +93,8 @@ async function importPriceListDirectories(rootDirPath) {
   for (const dirPath of dirPaths) {
     const dirName = dirPath.substring(dirPath.lastIndexOf('/') + 1);
     const splitted = dirName.split('_');
-    const minHeight = splitted[0];
-    const maxHeight = splitted[1];
+    const minHeight = parseInt(splitted[0]);
+    const maxHeight = parseInt(splitted[1]);
 
     const prices = await importPriceList(
       minHeight,
