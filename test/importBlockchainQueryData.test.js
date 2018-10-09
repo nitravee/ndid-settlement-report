@@ -13,13 +13,21 @@ function itAlwaysTrue() {
   const output = JSON.parse(data);
   const usedTokenReportDirPath = path.resolve(__dirname, '../test-data/GetUsedTokenReport');
   const reqDetailDirPath = path.resolve(__dirname, '../test-data/RequestDetail');
-  expect(_.isEqual(importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath), output))
+  expect(_.isEqual(importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, 0, 3000), output))
+    .to.be.true;
+}
+
+function itShouldBeEmpty() {
+  const usedTokenReportDirPath = path.resolve(__dirname, '../test-data/GetUsedTokenReport');
+  const reqDetailDirPath = path.resolve(__dirname, '../test-data/RequestDetail');
+  expect(_.isEqual(importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, 10000, 15000), {}))
     .to.be.true;
 }
 
 // Start Example Behaviors
 function exampleBehaviors() {
   it('should be true', itAlwaysTrue);
+  it('should be empty', itShouldBeEmpty);
 }
 
 // Start Describe

@@ -2,7 +2,7 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath) {
+function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, minBlockHeight, maxBlockHeight) {
   const tokenReport = glob.sync(path.join(usedTokenReportDirPath, '*.json'));
   const requests = [];
   tokenReport.forEach((file) => {
@@ -23,21 +23,40 @@ function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath) {
   });
 
   const data = {};
-  details.forEach((detail) => {
-    data[detail.request_id] = {};
-    data[detail.request_id].detail = detail;
-    const steps = [];
-    requests.forEach((request) => {
-      const step = {};
-      if (request.request_id === detail.request_id) {
-        step.height = request.height;
-        step.method = request.method;
-        step.nodeId = request.nodeId;
-        steps.push(step);
+  details
+    .filter(detail => detail.timed_out || detail.closed)
+    .forEach((detail) => {
+      const reqInfo = {};
+      reqInfo.detail = detail;
+
+      const steps = [];
+      requests.forEach((request) => {
+        const step = {};
+        if (request.request_id === detail.request_id) {
+          step.height = request.height;
+          step.method = request.method;
+          step.nodeId = request.nodeId;
+          steps.push(step);
+        }
+      });
+      reqInfo.steps = steps;
+
+      const createReqStep = reqInfo.steps.find(step => step.method === 'CreateRequest');
+      if (!createReqStep) {
+        return;
       }
+
+      if (minBlockHeight != null || maxBlockHeight != null) {
+        if (minBlockHeight != null && createReqStep.height < minBlockHeight) {
+          return;
+        }
+        if (maxBlockHeight != null && createReqStep.height > maxBlockHeight) {
+          return;
+        }
+      }
+
+      data[detail.request_id] = reqInfo;
     });
-    data[detail.request_id].steps = steps;
-  });
 
   return data;
 }
