@@ -1,4 +1,5 @@
 const chai = require('chai');
+const path = require('path');
 
 const { expect } = chai;
 const { importBlockchainQueryData } = require('../importBlockchainQueryData.js');
@@ -10,7 +11,10 @@ const fs = require('fs');
 function itAlwaysTrue() {
   const data = fs.readFileSync('expected.json');
   const output = JSON.parse(data);
-  expect(_.isEqual(importBlockchainQueryData(), output)).to.be.true;
+  const usedTokenReportDirPath = path.resolve(__dirname, '../test-data/GetUsedTokenReport');
+  const reqDetailDirPath = path.resolve(__dirname, '../test-data/RequestDetail');
+  expect(_.isEqual(importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath), output))
+    .to.be.true;
 }
 
 // Start Example Behaviors

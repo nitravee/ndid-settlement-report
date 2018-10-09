@@ -2,8 +2,8 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-function importBlockchainQueryData() {
-  const tokenReport = glob.sync('test-data/GetUsedTokenReport/*.json');
+function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath) {
+  const tokenReport = glob.sync(path.join(usedTokenReportDirPath, '*.json'));
   const requests = [];
   tokenReport.forEach((file) => {
     const filename = path.basename(file).split('.')[0];
@@ -16,7 +16,7 @@ function importBlockchainQueryData() {
     });
   });
 
-  const requestDetail = glob.sync('test-data/RequestDetail/*.json');
+  const requestDetail = glob.sync(path.join(reqDetailDirPath, '*.json'));
   const details = [];
   requestDetail.forEach((file) => {
     details.push(JSON.parse(fs.readFileSync(file)));
