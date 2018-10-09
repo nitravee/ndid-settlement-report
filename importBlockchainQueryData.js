@@ -1,10 +1,8 @@
-// App code here
-
 const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-function ndid() {
+function importBlockchainQueryData() {
   const tokenReport = glob.sync('test-data/GetUsedTokenReport/*.json');
   const requests = [];
   tokenReport.forEach((file) => {
@@ -44,4 +42,6 @@ function ndid() {
   return data;
 }
 
-module.exports.ndid = ndid;
+module.exports = {
+  importBlockchainQueryData,
+};

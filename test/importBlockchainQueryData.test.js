@@ -1,7 +1,7 @@
 const chai = require('chai');
 
 const { expect } = chai;
-const { ndid } = require('../app.js');
+const { importBlockchainQueryData } = require('../importBlockchainQueryData.js');
 
 const _ = require('lodash');
 const fs = require('fs');
@@ -10,7 +10,7 @@ const fs = require('fs');
 function itAlwaysTrue() {
   const data = fs.readFileSync('expected.json');
   const output = JSON.parse(data);
-  expect(_.isEqual(ndid(), output)).to.be.true;
+  expect(_.isEqual(importBlockchainQueryData(), output)).to.be.true;
 }
 
 // Start Example Behaviors
