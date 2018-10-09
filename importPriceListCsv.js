@@ -1,5 +1,10 @@
 const csv = require('csvtojson');
 const fs = require('fs');
+const { join } = require('path');
+
+const isDirectory = source => fs.lstatSync(source).isDirectory();
+const getDirectories = source =>
+  fs.readdirSync(source).map(name => join(source, name)).filter(isDirectory);
 
 async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asPricePath, orgToNodeIdMapPath) {
   if (!idpPricePath || !asPricePath || !orgToNodeIdMapPath) {
@@ -76,4 +81,36 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
   return result;
 }
 
-module.exports = importPriceList;
+async function importPriceListDirectories(rootDirPath) {
+  if (!rootDirPath) {
+    console.error('Root directory path must be specific.');
+    return;
+  }
+
+  const dirPaths = getDirectories(rootDirPath);
+
+  const result = [];
+  for (const dirPath of dirPaths) {
+    const dirName = dirPath.substring(dirPath.lastIndexOf('/') + 1);
+    const splitted = dirName.split('_');
+    const minHeight = splitted[0];
+    const maxHeight = splitted[1];
+
+    const prices = await importPriceList(
+      minHeight,
+      maxHeight,
+      join(dirPath, 'idp_price.csv'),
+      join(dirPath, 'as_price.csv'),
+      join(dirPath, 'orgToNodeIdMapping.json'),
+    );
+
+    result.push(prices);
+  }
+
+  return result;
+}
+
+module.exports = {
+  importPriceList,
+  importPriceListDirectories,
+};
