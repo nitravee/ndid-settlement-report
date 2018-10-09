@@ -104,7 +104,7 @@ function genRowsFromRequest(data, reqId) {
   const { settlement } = data[reqId];
 
   const rpIdp = [];
-  settlement.idpList.map((item) => {
+  settlement.idpList.forEach((item) => {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.request_id = settlement.request_id;
@@ -125,7 +125,7 @@ function genRowsFromRequest(data, reqId) {
   });
 
   const rpAs = [];
-  settlement.asList.map((item) => {
+  settlement.asList.forEach((item) => {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.request_id = settlement.request_id;
@@ -182,7 +182,7 @@ function createFile(csv, filePathInOutputDir, outputDirPath) {
 
 function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
   const summary = [];
-  nodeIdList.map((id) => {
+  nodeIdList.forEach((id) => {
     const filter = requests.filter(item => item.idp_id === id);
     const sum = filter.reduce((prev, curr) => ({
       rpId: curr.rp_id,
@@ -199,7 +199,7 @@ function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
 
 function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
   const summary = [];
-  checkDataList.map((checkData) => {
+  checkDataList.forEach((checkData) => {
     const filter = requests.filter((item) => {
       if (checkRp) {
         return checkData.rpId === item.rp_id && checkData.serviceId === item.service_id;
@@ -253,7 +253,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, outputDirPath);
   });
 
-  list.idpList.map((id) => {
+  list.idpList.forEach((id) => {
     const idpRp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.idp_id) {
@@ -272,7 +272,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, outputDirPath);
   });
 
-  list.rpList.map((id) => {
+  list.rpList.forEach((id) => {
     const rpAs = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.rp_id) {
@@ -295,7 +295,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, outputDirPath);
   });
 
-  list.asList.map((id) => {
+  list.asList.forEach((id) => {
     const asRp = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.as_id) {
