@@ -1,0 +1,3 @@
+"RP Node ID","Request ID","Request Status","Created Block Height","AS Node ID","AS Service ID","AS Price"
+"ncb_rp_1","1de6e10b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca558ba","Complete",5748,"ncb_as_2","002.credit_info_001",50
+"ncb_rp_1","9999910b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca99999","Complete",6748,"ncb_as_3","002.credit_info_001",50

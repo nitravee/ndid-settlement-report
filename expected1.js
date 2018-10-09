@@ -117,7 +117,7 @@ const value = {
       closed: true,
     },
   },
-  '1de0e10b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca558ba': {
+  '9999910b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca99999': {
     detail: {
       request_timeout: 60,
       requester_node_id: 'ncb_rp_1',
@@ -163,48 +163,48 @@ const value = {
       special: false,
       closed: true,
       request_id:
-        '1de6e10b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca558ba',
+        '9999910b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca99999',
       min_ial: 2.3,
       request_message_hash: 'nd//Vrgrr9UYKz/Tj3CQu56TQTmdGX7m2B3GlKomRzw=',
       mode: 1,
     },
     steps: [
       {
-        height: 5748,
+        height: 6748,
         method: 'CreateIdpResponse',
         nodeId: 'mock_idp_1',
       },
       {
-        height: 5747,
+        height: 6747,
         method: 'CreateIdpResponse',
         nodeId: 'mock_idp_2',
       },
       {
-        height: 5750,
+        height: 6750,
         method: 'SignData',
         nodeId: 'ncb_as_2',
       },
       {
-        height: 5745,
+        height: 6745,
         method: 'CreateRequest',
         nodeId: 'ncb_rp_1',
       },
       {
-        height: 5752,
+        height: 6752,
         method: 'SetDataReceived',
         nodeId: 'ncb_rp_1',
       },
       {
-        height: 5754,
+        height: 6754,
         method: 'CloseRequest',
         nodeId: 'ncb_rp_1',
       },
     ],
     settlement: {
       request_id:
-        '1de6e10b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca558ba',
+        '9999910b2933948cdca039081f5eacd02683e74b51db62e55da60d61dca99999',
       requester_node_id: 'ncb_rp_1',
-      height: 5748,
+      height: 6748,
       idpList: [
         {
           idp_id: 'mock_idp_1',
@@ -227,7 +227,7 @@ const value = {
       ],
       asList: [
         {
-          as_id: 'ncb_as_2',
+          as_id: 'ncb_as_3',
           service_id: '002.credit_info_001',
           as_fee: 50,
         },
