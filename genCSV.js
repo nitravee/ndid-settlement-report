@@ -7,6 +7,8 @@ const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
 
+const NDID_PRICE_PER_REQ = 5;
+
 const fieldsRpIdp = [
   {
     label: 'RP Node ID',
@@ -93,12 +95,42 @@ const fieldsRpAsSummary = [
   },
 ];
 
+const fieldsRpNdid = [
+  {
+    label: 'RP Node ID',
+    value: 'rp_id',
+  }, {
+    label: 'Request ID',
+    value: 'request_id',
+  }, {
+    label: 'Request Status',
+    value: 'status',
+  }, {
+    label: 'Created Block Height',
+    value: 'height',
+  }, {
+    label: 'NDID Price',
+    value: 'price',
+  },
+];
+const fieldsRpNdidSummary = [
+  {
+    label: 'RP Node ID',
+    value: 'rpId',
+  }, {
+    label: 'NDID Price',
+    value: 'ndidPrice',
+  },
+];
+
 const rpIdpParser = new Json2csvParser({ fields: fieldsRpIdp });
 const rpIdpSumParser = new Json2csvParser({ fields: fieldsRpIdpSummary });
 
 const rpAsParser = new Json2csvParser({ fields: fieldsRpAs });
 const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 
+const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
+const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 
 function genRowsFromRequest(data, reqId) {
   const { settlement } = data[reqId];
@@ -142,9 +174,18 @@ function genRowsFromRequest(data, reqId) {
     rpAs.push(request);
   });
 
+  const rpNdid = [{
+    rp_id: settlement.requester_node_id,
+    request_id: settlement.request_id,
+    status: settlement.closed ? 'Complete' : 'Timeout',
+    height: settlement.height,
+    price: NDID_PRICE_PER_REQ,
+  }];
+
   return {
     rpIdp,
     rpAs,
+    rpNdid,
   };
 }
 
@@ -220,6 +261,21 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
+function genSummaryRpNdid(path, requests, rpId, outputDirPath) {
+  const summary = [
+    requests
+      .filter(req => req.rp_id === rpId)
+      .reduce((prev, curr) => ({
+        rpId: curr.rp_id,
+        ndidPrice: prev.ndidPrice + curr.price,
+      }), {
+        ndidPrice: 0,
+      }),
+  ];
+  const sumCsv = rpNdidSumParser.parse(summary);
+  createFile(sumCsv, path, outputDirPath);
+}
+
 function genCSV(settlementWithPrice, outputDirPath) {
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
@@ -227,9 +283,11 @@ function genCSV(settlementWithPrice, outputDirPath) {
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
       rpAs: prev.rpAs.concat(curr.rpAs),
+      rpNdid: prev.rpNdid.concat(curr.rpNdid),
     }), {
       rpIdp: [],
       rpAs: [],
+      rpNdid: [],
     });
   const list = getList(allRows);
 
@@ -251,6 +309,11 @@ function genCSV(settlementWithPrice, outputDirPath) {
       }
     });
     genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, outputDirPath);
+
+    const rpNdidCsv = rpNdidParser.parse(allRows.rpNdid.filter(row => id === row.rp_id));
+    createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
+
+    genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, outputDirPath);
   });
 
   list.idpList.forEach((id) => {
