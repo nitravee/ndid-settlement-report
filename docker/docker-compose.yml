@@ -4,6 +4,8 @@ services:
     image: prapatb/ndid-settlement-report:latest
     environment: 
       - QUERY_SETTLEMENT=${QUERY_SETTLEMENT:-YES}
+      - MIN_BLOCK_HEIGHT=${MIN_BLOCK_HEIGHT}
+      - MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
     security_opt:
       - no-new-privileges
     volumes:

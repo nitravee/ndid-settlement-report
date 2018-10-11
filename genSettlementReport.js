@@ -34,6 +34,11 @@ if (argv.o) {
 }
 
 console.log('Begin generating settlement reports.');
+console.log('');
+console.log(`Min block height: ${minHeight || 'Not specific'}`);
+console.log(`Max block height: ${maxHeight || 'Not specific'}`);
+console.log('');
+
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
     console.log('Importing price list succeeded.');
@@ -48,6 +53,9 @@ importPriceListDirectories(pricesDirPath)
     console.log('Calculating price for settlement succeeded.');
 
     genCSV(settlementWithPrice, outputPath);
+    console.log('');
     console.log(`Settlement report (.csv) files have been created at ${outputPath}`);
+    console.log('');
+
     console.log('Generating settlement reports succeeded.');
   });
