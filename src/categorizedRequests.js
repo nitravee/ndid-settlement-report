@@ -105,15 +105,15 @@ function categorizedRequests(objData) {
             }
       } else if (dataInSteps.method === 'TimeOutRequest') {
             const newSteps = steps.filter(data => data.method === 'CreateIdpResponse');
-            if (detail.idp_list.length > newSteps.length) {
+            if (detail.idp_id_list.length > newSteps.length) {
                 if (newSteps.length >= 1) {
-                    detail.idp_list.forEach((data) => {
+                    detail.idp_id_list.forEach((data) => {
                         newSteps.forEach((dataInNewSteps) => {
                             if (dataInNewSteps.nodeId !== data) idpList.push({ idp_id: data, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0.5 });
                         });
                     });
                 } else { 
-                    idpList.push({ idp_id: detail.idp_list[0], status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0.5 });
+                    idpList.push({ idp_id: detail.idp_id_list[0], status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0.5 });
                 }
             }
       }
