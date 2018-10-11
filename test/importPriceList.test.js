@@ -1,8 +1,8 @@
 const chai = require('chai');
 const path = require('path');
 const _ = require('lodash');
-const { importPriceList, importPriceListDirectories } = require('../importPriceList');
-const expectedPriceList = require('../expectedPriceList');
+const { importPriceList, importPriceListDirectories } = require('../src/importPriceList');
+const expectedPriceList = require('../test-data/expectedPriceList');
 
 const { expect } = chai;
 

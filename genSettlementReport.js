@@ -1,10 +1,10 @@
 const { argv } = require('yargs');
 const path = require('path');
-const { importBlockchainQueryData } = require('./importBlockchainQueryData');
-const { importPriceListDirectories } = require('./importPriceList');
-const { categorizedRequests } = require('./categorizedRequests');
-const { createSummaryReport } = require('./createSummaryReport');
-const { genCSV } = require('./genCSV');
+const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
+const { importPriceListDirectories } = require('./src/importPriceList');
+const { categorizedRequests } = require('./src/categorizedRequests');
+const { createSummaryReport } = require('./src/createSummaryReport');
+const { genCSV } = require('./src/genCSV');
 
 let minHeight;
 let maxHeight;
