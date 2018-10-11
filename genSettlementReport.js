@@ -33,15 +33,13 @@ if (argv.o) {
   outputPath = path.resolve(currWorkingPath, argv.o);
 }
 
-console.log('Begin generating settlement reports.');
-console.log('');
-console.log(`Min block height: ${minHeight || 'Not specific'}`);
+console.log('Started generating settlement reports.');
+console.log(`\nMin block height: ${minHeight || 'Not specific'}`);
 console.log(`Max block height: ${maxHeight || 'Not specific'}`);
-console.log('');
 
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
-    console.log('Importing price list succeeded.');
+    console.log('\nImporting price list succeeded.');
 
     const reqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
     console.log('Importing blockchain query data succeeded.');
@@ -53,9 +51,7 @@ importPriceListDirectories(pricesDirPath)
     console.log('Calculating price for settlement succeeded.');
 
     genCSV(settlementWithPrice, outputPath);
-    console.log('');
-    console.log(`Settlement report (.csv) files have been created at ${outputPath}`);
-    console.log('');
+    console.log(`\nSettlement report (.csv) files have been created at ${outputPath}`);
 
-    console.log('Generating settlement reports succeeded.');
+    console.log('\nGenerating settlement reports succeeded.');
   });

@@ -6,13 +6,11 @@ MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
 
 if [ "${QUERY_SETTLEMENT}" = "YES" ]
 then
-  echo 'Begin querying blockchain.'
+  printf 'Started querying blockchain.'
   python ./settlement-query/getSettlementData.py
-  echo 'Query blockchain succeeded.'
-  echo ''
+  printf 'Query blockchain succeeded.\n'
 else
-  echo 'Bypass querying blockchain.'
-  echo ''
+  printf 'Skipped querying blockchain.\n'
 fi
 
 node ./settlement-report/genSettlementReport -r ./GetUsedTokenReport/ -d ./RequestDetail/ -p ./Prices/ -b "${MIN_BLOCK_HEIGHT}" -e "${MAX_BLOCK_HEIGHT}" -o ./Reports
