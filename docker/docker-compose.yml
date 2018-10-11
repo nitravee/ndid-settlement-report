@@ -1,0 +1,14 @@
+version: '3'
+services:
+  settlement-report:
+    image: prapatb/ndid-settlement-report:latest
+    environment: 
+      - QUERY_SETTLEMENT=${QUERY_SETTLEMENT:-YES}
+    security_opt:
+      - no-new-privileges
+    volumes:
+      - ./settlement/GetUsedTokenReport:/GetUsedTokenReport
+      - ./settlement/RequestDetail:/RequestDetail
+      - ./settlement/Reports:/Reports
+      - ./settlement/Prices:/Prices
+    network_mode: "host"

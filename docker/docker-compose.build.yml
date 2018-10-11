@@ -1,0 +1,7 @@
+version: "3.3"
+services: 
+  settlement-report:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: prapatb/ndid-settlement-report:latest
