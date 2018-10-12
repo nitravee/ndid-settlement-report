@@ -3,6 +3,7 @@
 // const value = require('./expected1');
 const Json2csvParser = require('json2csv').Parser;
 
+const _ = require('lodash');
 const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
@@ -150,8 +151,8 @@ function genRowsFromRequest(data, reqId) {
     request.ial = item.ial;
     request.aal = item.aal;
     request.response = item.status;
-    request.price = item.idp_price;
-    request.full_price = item.idp_full_price;
+    request.price = _.round(item.idp_price, 6);
+    request.full_price = _.round(item.idp_full_price, 6);
 
     rpIdp.push(request);
   });
@@ -169,7 +170,7 @@ function genRowsFromRequest(data, reqId) {
     request.height = settlement.height;
     request.as_id = item.as_id;
     request.service_id = item.service_id;
-    request.price = item.as_price;
+    request.price = _.round(item.as_price, 6);
 
     rpAs.push(request);
   });
@@ -232,6 +233,7 @@ function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
     }), {
       idpPrice: 0,
     });
+    sum.idpPrice = _.round(sum.idpPrice, 6);
     summary.push(sum);
   });
   const sumCsv = rpIdpSumParser.parse(summary);
@@ -255,6 +257,7 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
     }), {
       asPrice: 0,
     });
+    sumRpAs.asPrice = _.round(sumRpAs.asPrice, 6);
     summary.push(sumRpAs);
   });
   const sumCsv = rpAsSumParser.parse(summary);
@@ -271,7 +274,8 @@ function genSummaryRpNdid(path, requests, rpId, outputDirPath) {
       }), {
         ndidPrice: 0,
       }),
-  ];
+  ].map(item => ({ ...item, ndidPrice: _.round(item.ndidPrice, 6) }));
+
   const sumCsv = rpNdidSumParser.parse(summary);
   createFile(sumCsv, path, outputDirPath);
 }
