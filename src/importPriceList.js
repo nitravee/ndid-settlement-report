@@ -47,7 +47,7 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
           prices['idp'][nodeId][aal] = {};
         }
 
-        prices['idp'][nodeId][aal][ial] = parseInt(row[name]);
+        prices['idp'][nodeId][aal][ial] = parseFloat(row[name]);
       }
     }
   }
@@ -55,7 +55,7 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
   for (const row of asJsonArray) {
     const orgNames = Object.keys(row).slice(1);
     const data = row['Data'];
-    
+
     for (const name of orgNames) {
       const asNodeIds = mapping[name]['as'];
       if (!asNodeIds || asNodeIds.length === 0) {
@@ -67,7 +67,7 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
           prices['as'][nodeId] = {};
         }
 
-        prices['as'][nodeId][data] = parseInt(row[name]);
+        prices['as'][nodeId][data] = parseFloat(row[name]);
       }
     }
   }
