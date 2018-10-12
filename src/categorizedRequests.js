@@ -89,22 +89,23 @@ function categorizedRequests(objData) {
             // else {
             //     idpList.push({ idp_id, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio });
             // }
-      } else if (dataInSteps.method === 'SignData') {
-            let as_price = 1;
-            let service_id = '';
-            as_id = dataInSteps.nodeId;
-            if (detail.data_request_list !== null) {
-                detail.data_request_list.forEach((data) => {
-                    if (data.as_id_list.includes(dataInSteps.nodeId)) {
-                        service_id = data.service_id;
-                        if (data.answered_as_id_list.length !== 0) {
-                            if (!data.answered_as_id_list.includes(dataInSteps.nodeId) && !data.received_data_from_list.includes(dataInSteps.nodeId) && detail.closed) as_price = 0; // เคสที่asไม่ได้เงิน
-                        }
-                    }
-                });
-            if (as_price > 0) asList.push({ as_id, service_id });
-            }
       } 
+    //   else if (dataInSteps.method === 'SignData') {
+    //         let as_price = 1;
+    //         let service_id = '';
+    //         as_id = dataInSteps.nodeId;
+    //         if (detail.data_request_list !== null) {
+    //             detail.data_request_list.forEach((data) => {
+    //                 if (data.as_id_list.includes(dataInSteps.nodeId)) {
+    //                     service_id = data.service_id;
+    //                     if (data.answered_as_id_list.length !== 0) {
+    //                         if (!data.answered_as_id_list.includes(dataInSteps.nodeId) && !data.received_data_from_list.includes(dataInSteps.nodeId) && detail.closed) as_price = 0; // เคสที่asไม่ได้เงิน
+    //                     }
+    //                 }
+    //             });
+    //         if (as_price > 0) asList.push({ as_id, service_id });
+    //         }
+    //   } 
       // else if (dataInSteps.method === 'TimeOutRequest') {
       //       const newSteps = steps.filter(data => data.method === 'CreateIdpResponse');
       //       if (detail.idp_id_list.length > newSteps.length) {
@@ -124,6 +125,14 @@ function categorizedRequests(objData) {
     // Request to an IdP but there is no CreateIdpReponse according to it
     const notAnswerIdpNodeIds = detail.idp_id_list.filter(nodeId => !idpList.map(idpSettlementInfo => idpSettlementInfo.idp_id).includes(nodeId));
     idpList.push(...notAnswerIdpNodeIds.map(nodeId => ({ idp_id: nodeId, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0 })));
+
+    asList.push(...detail.data_request_list
+      .filter(dataReq => dataReq.answered_as_id_list.length > 0)
+      .map(dataReq => dataReq.answered_as_id_list.map(asId => ({ 
+        as_id: asId,
+        service_id: dataReq.service_id,
+      })))
+      .reduce((prev, curr) => prev.concat(curr), []));
 
     settlement = { request_id, requester_node_id, height, idpList, asList, closed };
     objData[rootName] = { ...objData[rootName], settlement };
