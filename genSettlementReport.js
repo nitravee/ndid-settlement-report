@@ -34,8 +34,8 @@ if (argv.o) {
 }
 
 console.log('Started generating settlement reports.');
-console.log(`\nMin block height: ${minHeight || 'Not specific'}`);
-console.log(`Max block height: ${maxHeight || 'Not specific'}`);
+console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
+console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
