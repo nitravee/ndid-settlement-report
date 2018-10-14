@@ -6,6 +6,18 @@ import base64
 import os.path
 import tendermint_pb2
 
+if 'TM_RPC_IP' in os.environ:
+    tm_rpc_ip = os.environ["TM_RPC_IP"]
+else:
+    tm_rpc_ip = 'localhost'
+
+if 'TM_RPC_PORT' in os.environ:
+    tm_rpc_port = os.environ["TM_RPC_PORT"]
+else:
+    tm_rpc_port = 26000
+
+tm_rpc_domain = tm_rpc_ip + ':' + tm_rpc_port
+
 if 'START_BLOCK' in os.environ:
     start_block = os.environ["START_BLOCK"]
 else:
@@ -14,7 +26,7 @@ else:
 if 'END_BLOCK' in os.environ:
     end_block = os.environ["END_BLOCK"]
 else:
-    json_result = urllib2.urlopen('http://localhost:26600/abci_info').read()
+    json_result = urllib2.urlopen('http://' + tm_rpc_domain + '/abci_info').read()
     result = json.loads(json_result)
     end_block = result['result']['response']['last_block_height']
 
@@ -25,11 +37,11 @@ final_result = {}
 
 for height in range(start_block, end_block):
     print('Start get Block: ' + str(height))
-    json_block = urllib2.urlopen('http://localhost:26600/block?height=' +
+    json_block = urllib2.urlopen('http://' + tm_rpc_domain + '/block?height=' +
                                  str(height)).read()
     block = json.loads(json_block)
     json_block_result = urllib2.urlopen(
-        'http://localhost:26600/block_results?height=' + str(height)).read()
+        'http://' + tm_rpc_domain + '/block_results?height=' + str(height)).read()
     block_result = json.loads(json_block_result)
     if block['result']['block']['data']['txs'] is not None:
         index = 0
@@ -69,7 +81,7 @@ for height in range(start_block, end_block):
                 data = '0x' + queryObj.SerializeToString().encode(
                     "utf-8").encode("hex")
                 params = urllib.urlencode({'data': data})
-                req = urllib2.urlopen('http://localhost:26600/abci_query?' +
+                req = urllib2.urlopen('http://' + tm_rpc_domain + '/abci_query?' +
                                       params)
                 json_result = req.read()
                 result = json.loads(json_result)
@@ -129,7 +141,7 @@ for node_id in final_result:
             data = '0x' + queryObj.SerializeToString().encode(
                 "utf-8").encode("hex")
             params = urllib.urlencode({'data': data})
-            req = urllib2.urlopen('http://localhost:26600/abci_query?' +
+            req = urllib2.urlopen('http://' + tm_rpc_domain + '/abci_query?' +
                                     params)
             json_result = req.read()
             result = json.loads(json_result)
