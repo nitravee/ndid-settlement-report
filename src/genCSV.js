@@ -141,11 +141,7 @@ function genRowsFromRequest(data, reqId) {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.request_id = settlement.request_id;
-    if (settlement.closed) {
-      request.status = 'Complete';
-    } else {
-      request.status = 'Timeout';
-    }
+    request.status = settlement.status;
     request.height = settlement.height;
     request.idp_id = item.idp_id;
     request.ial = item.ial;
@@ -162,11 +158,7 @@ function genRowsFromRequest(data, reqId) {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.request_id = settlement.request_id;
-    if (settlement.closed) {
-      request.status = 'Complete';
-    } else {
-      request.status = 'Timeout';
-    }
+    request.status = settlement.status;
     request.height = settlement.height;
     request.as_id = item.as_id;
     request.service_id = item.service_id;
@@ -178,7 +170,7 @@ function genRowsFromRequest(data, reqId) {
   const rpNdid = [{
     rp_id: settlement.requester_node_id,
     request_id: settlement.request_id,
-    status: settlement.closed ? 'Complete' : 'Timeout',
+    status: settlement.status,
     height: settlement.height,
     price: NDID_PRICE_PER_REQ,
   }];

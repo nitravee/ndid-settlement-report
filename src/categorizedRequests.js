@@ -62,6 +62,28 @@
 //   },
 // };
 
+function getSettlementReqStatus(reqDetail) {
+  if (reqDetail.timed_out) {
+    return 'Timeout';
+  }
+
+  if (reqDetail.data_request_list.length > 0) {
+    for (const dataReqInfo of reqDetail.data_request_list) {
+      if (dataReqInfo.received_data_from_list.length < dataReqInfo.min_as) {
+        return 'Close';
+      }
+    }
+  }
+
+  const validIdpResponseList = reqDetail.response_list ? reqDetail
+    .response_list
+    .filter(idpResp => idpResp.valid_proof !== false
+      && idpResp.valid_signature !== false
+      && idpResp.valid_ial !== false) : [];
+
+  return validIdpResponseList.length >= reqDetail.min_idp ? 'Complete' : 'Close';
+}
+
 function categorizedRequests(objData) {
   let settlement = {};
   let requester_node_id = 0;
@@ -134,7 +156,7 @@ function categorizedRequests(objData) {
       })))
       .reduce((prev, curr) => prev.concat(curr), []));
 
-    settlement = { request_id, requester_node_id, height, idpList, asList, closed };
+    settlement = { request_id, requester_node_id, height, idpList, asList, status: getSettlementReqStatus(detail) };
     objData[rootName] = { ...objData[rootName], settlement };
   }
   return objData;
