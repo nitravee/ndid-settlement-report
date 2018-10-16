@@ -34,6 +34,12 @@ if (argv.o) {
 }
 
 console.log('Started generating settlement reports.');
+
+console.log(`\nGetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
+console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
+console.log(`Prices Dir: ${pricesDirPath}`);
+console.log(`Output Dir: ${outputPath}`);
+
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 
