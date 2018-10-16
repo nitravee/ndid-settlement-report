@@ -251,9 +251,12 @@ function createSummaryReport(objData, priceList) {
 
   for(let rootName in result) {
     const scopedPriceList = priceList
-        .filter(item => 
-          result[rootName].settlement.height >= item['min_block_height'] && result[rootName].settlement.height <= item['max_block_height']
-        )[0]['prices'];
+        .filter(item => {
+          if (item['max_block_height'] == null) {
+            return result[rootName].settlement.height >= item['min_block_height'];
+          }
+          return result[rootName].settlement.height >= item['min_block_height'] && result[rootName].settlement.height <= item['max_block_height'];
+        })[0]['prices'];
         result[rootName].settlement.idpList.forEach((dataInIdpList,index) => {
          const {aal, ial, idp_id,} = dataInIdpList
          idp_full_price = scopedPriceList['idp'][idp_id][aal][ial];
