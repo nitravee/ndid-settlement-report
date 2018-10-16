@@ -88,13 +88,15 @@ async function importPriceListDirectories(rootDirPath) {
   }
 
   const dirPaths = getDirectories(rootDirPath);
+  const minHeights = dirPaths
+    .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
+    .sort();
 
   const result = [];
-  for (const dirPath of dirPaths) {
-    const dirName = dirPath.substring(dirPath.lastIndexOf('/') + 1);
-    const splitted = dirName.split('_');
-    const minHeight = parseInt(splitted[0]);
-    const maxHeight = parseInt(splitted[1]);
+  for (let i = 0; i < minHeights.length; i++) {
+    const minHeight = minHeights[i];
+    const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
+    const dirPath = join(rootDirPath, minHeight + '');
 
     const prices = await importPriceList(
       minHeight,
