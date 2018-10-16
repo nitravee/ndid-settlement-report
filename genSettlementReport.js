@@ -1,5 +1,7 @@
 const { argv } = require('yargs');
 const path = require('path');
+const fs = require('fs');
+const mkpath = require('mkpath');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories } = require('./src/importPriceList');
 const { categorizedRequests } = require('./src/categorizedRequests');
@@ -33,6 +35,8 @@ if (argv.o) {
   outputPath = path.resolve(currWorkingPath, argv.o);
 }
 
+const enableDebugFile = argv['debug-file'];
+
 console.log('Started generating settlement reports.');
 
 console.log(`\nGetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
@@ -43,18 +47,49 @@ console.log(`Output Dir: ${outputPath}`);
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 
+mkpath.sync(outputPath);
+
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
     console.log('\nImporting price list succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(outputPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: priceList.json', err);
+        }
+      });
+    }
+    
 
     const reqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
     console.log('Importing blockchain query data succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(outputPath, './queryDataJson.json'), JSON.stringify(reqData, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: queryDataJson.json', err);
+        }
+      });
+    }
 
     const settlement = categorizedRequests(reqData);
     console.log('Calculating settlement succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(outputPath, './settlement.json'), JSON.stringify(settlement, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: settlement.json', err);
+        }
+      });
+    }
 
     const settlementWithPrice = createSummaryReport(settlement, priceList);
     console.log('Calculating price for settlement succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(outputPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: settlementWithPrice.json', err);
+        }
+      });
+    }
 
     genCSV(settlementWithPrice, outputPath);
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}`);
