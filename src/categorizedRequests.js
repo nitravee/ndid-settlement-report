@@ -67,12 +67,13 @@ function getSettlementReqStatus(reqDetail) {
     return 'Timeout';
   }
 
-  if (reqDetail.data_request_list.length > 0) {
-    for (const dataReqInfo of reqDetail.data_request_list) {
-      if (dataReqInfo.received_data_from_list.length < dataReqInfo.min_as) {
-        return 'Close';
-      }
-    }
+  const haveUnsuccessfulDataReq = reqDetail.data_request_list && reqDetail
+    .data_request_list
+    .find(dataReqInfo =>
+      dataReqInfo.received_data_from_list.length < dataReqInfo.min_as) !== undefined;
+
+  if (haveUnsuccessfulDataReq) {
+    return 'Close';
   }
 
   const validIdpResponseList = reqDetail.response_list ? reqDetail
@@ -87,61 +88,38 @@ function getSettlementReqStatus(reqDetail) {
 function categorizedRequests(objData) {
   let settlement = {};
   let requester_node_id = 0;
-  for (let rootName in objData) {
+  Object.keys(objData).forEach((rootName) => {    
     const idpList = [];
     const asList = [];
-    const { request_id, timed_out, closed, response_list, min_idp, data_request_list } = objData[rootName].detail;
+    const { request_id } = objData[rootName].detail;
     const { steps, detail } = objData[rootName];
-    const idp_id = 0;
-    let as_id = 0;
-    steps.forEach(dataInSteps => {
+    let height;
+    steps.forEach((dataInSteps) => {
       if (dataInSteps.method === 'CreateRequest') {
         height = dataInSteps.height;
         requester_node_id = dataInSteps.nodeId;
       } else if (dataInSteps.method === 'CreateIdpResponse') {
-            const idp_fee_ratio = 1;
-            if (detail.response_list !== null) {
-                detail.response_list.forEach((dataInResponse) => {
-                    if (dataInResponse.idp_id === dataInSteps.nodeId) {
-                        const { status, ial, aal, idp_id } = dataInResponse;
-                        idpList.push({ idp_id, status, ial, aal, idp_fee_ratio });
-                    }
-                });
+        const idp_fee_ratio = 1;
+        if (detail.response_list !== null) {
+          detail.response_list.forEach((dataInResponse) => {
+            if (dataInResponse.idp_id === dataInSteps.nodeId) {
+              const {
+                status,
+                ial,
+                aal,
+                idp_id,
+              } = dataInResponse;
+              idpList.push({
+                idp_id,
+                status,
+                ial,
+                aal,
+                idp_fee_ratio,
+              });
             }
-            // else {
-            //     idpList.push({ idp_id, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio });
-            // }
-      } 
-    //   else if (dataInSteps.method === 'SignData') {
-    //         let as_price = 1;
-    //         let service_id = '';
-    //         as_id = dataInSteps.nodeId;
-    //         if (detail.data_request_list !== null) {
-    //             detail.data_request_list.forEach((data) => {
-    //                 if (data.as_id_list.includes(dataInSteps.nodeId)) {
-    //                     service_id = data.service_id;
-    //                     if (data.answered_as_id_list.length !== 0) {
-    //                         if (!data.answered_as_id_list.includes(dataInSteps.nodeId) && !data.received_data_from_list.includes(dataInSteps.nodeId) && detail.closed) as_price = 0; // เคสที่asไม่ได้เงิน
-    //                     }
-    //                 }
-    //             });
-    //         if (as_price > 0) asList.push({ as_id, service_id });
-    //         }
-    //   } 
-      // else if (dataInSteps.method === 'TimeOutRequest') {
-      //       const newSteps = steps.filter(data => data.method === 'CreateIdpResponse');
-      //       if (detail.idp_id_list.length > newSteps.length) {
-      //           if (newSteps.length >= 1) {
-      //               detail.idp_id_list.forEach((data) => {
-      //                   newSteps.forEach((dataInNewSteps) => {
-      //                       if (dataInNewSteps.nodeId !== data) idpList.push({ idp_id: data, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0.5 });
-      //                   });
-      //               });
-      //           } else { 
-      //               idpList.push({ idp_id: detail.idp_id_list[0], status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0.5 });
-      //           }
-      //       }
-      // }
+          });
+        }
+      }
     });
 
     // Request to an IdP but there is no CreateIdpReponse according to it
@@ -156,9 +134,17 @@ function categorizedRequests(objData) {
       })))
       .reduce((prev, curr) => prev.concat(curr), []));
 
-    settlement = { request_id, requester_node_id, height, idpList, asList, status: getSettlementReqStatus(detail) };
+    settlement = {
+      request_id,
+      requester_node_id,
+      height,
+      idpList,
+      asList,
+      status: getSettlementReqStatus(detail),
+    };
     objData[rootName] = { ...objData[rootName], settlement };
-  }
+  });
+
   return objData;
 }
 
