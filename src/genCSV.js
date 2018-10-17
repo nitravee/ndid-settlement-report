@@ -10,6 +10,37 @@ const { join } = require('path');
 
 const NDID_PRICE_PER_REQ = 5;
 
+const fieldsPending = [
+  {
+    label: 'RP Node ID',
+    value: 'rp_id',
+  }, {
+    label: 'Request ID',
+    value: 'request_id',
+  }, {
+    label: 'Request Status',
+    value: 'status',
+  }, {
+    label: 'Created Block Height',
+    value: 'height',
+  }, {
+    label: 'IdP Node IDs',
+    value: 'idp_ids',
+  }, {
+    label: 'Requested IAL',
+    value: 'ial',
+  }, {
+    label: 'Requested AAL',
+    value: 'aal',
+  }, {
+    label: 'AS Service ID',
+    value: 'service_id',
+  }, {
+    label: 'AS Node IDs',
+    value: 'as_ids',
+  },
+];
+
 const fieldsRpIdp = [
   {
     label: 'RP Node ID',
@@ -124,6 +155,8 @@ const fieldsRpNdidSummary = [
   },
 ];
 
+const pendingParser = new Json2csvParser({ fields: fieldsPending });
+
 const rpIdpParser = new Json2csvParser({ fields: fieldsRpIdp });
 const rpIdpSumParser = new Json2csvParser({ fields: fieldsRpIdpSummary });
 
@@ -133,8 +166,27 @@ const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 
-function genRowsFromRequest(data, reqId) {
-  const { settlement } = data[reqId];
+function genRowsFromPendingRequest(req) {
+  const { detail, settlement } = req;
+
+  const rows = (detail.data_request_list.length > 0 ? detail.data_request_list : [{}])
+    .map(({ as_id_list = [], service_id = '' }) => ({
+      rp_id: settlement.requester_node_id,
+      request_id: settlement.request_id,
+      status: settlement.status,
+      height: settlement.height,
+      idp_ids: detail.idp_id_list.join(', '),
+      ial: detail.min_ial,
+      aal: detail.min_aal,
+      service_id,
+      as_ids: as_id_list.join(', '),
+    }));
+
+  return rows;
+}
+
+function genRowsFromRequest(req) {
+  const { settlement } = req;
 
   const rpIdp = [];
   settlement.idpList.forEach((item) => {
@@ -182,7 +234,7 @@ function genRowsFromRequest(data, reqId) {
   };
 }
 
-function getList(allRows) {
+function getNodeList(allRows) {
   const rpList = [];
   const idpList = [];
   const asList = [];
@@ -272,10 +324,16 @@ function genSummaryRpNdid(path, requests, rpId, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genCSV(settlementWithPrice, outputDirPath) {
+function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
+  const allPendingReqIds = Object.keys(pendingRequests);
+  const allPendingReqRows = allPendingReqIds
+    .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId]))
+    .reduce((prev, curr) => prev.concat(curr), []);
+  createFile(pendingParser.parse(allPendingReqRows), 'csv/pending.csv', outputDirPath);
+
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
-    .map(reqId => genRowsFromRequest(settlementWithPrice, reqId))
+    .map(reqId => genRowsFromRequest(settlementWithPrice[reqId]))
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
       rpAs: prev.rpAs.concat(curr.rpAs),
@@ -285,10 +343,9 @@ function genCSV(settlementWithPrice, outputDirPath) {
       rpAs: [],
       rpNdid: [],
     });
-  const list = getList(allRows);
+  const nodeList = getNodeList(allRows);
 
-
-  list.rpList.forEach((id) => {
+  nodeList.rpList.forEach((id) => {
     const rpIdp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.rp_id) {
@@ -312,7 +369,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, outputDirPath);
   });
 
-  list.idpList.forEach((id) => {
+  nodeList.idpList.forEach((id) => {
     const idpRp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.idp_id) {
@@ -331,7 +388,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, outputDirPath);
   });
 
-  list.rpList.forEach((id) => {
+  nodeList.rpList.forEach((id) => {
     const rpAs = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.rp_id) {
@@ -354,7 +411,7 @@ function genCSV(settlementWithPrice, outputDirPath) {
     genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, outputDirPath);
   });
 
-  list.asList.forEach((id) => {
+  nodeList.asList.forEach((id) => {
     const asRp = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.as_id) {

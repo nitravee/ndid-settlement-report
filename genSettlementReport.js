@@ -4,7 +4,8 @@ const fs = require('fs');
 const mkpath = require('mkpath');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories } = require('./src/importPriceList');
-const { categorizedRequests } = require('./src/categorizedRequests');
+const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
+const { categorizeRequests } = require('./src/categorizeRequests');
 const { createSummaryReport } = require('./src/createSummaryReport');
 const { genCSV } = require('./src/genCSV');
 
@@ -12,6 +13,7 @@ let minHeight;
 let maxHeight;
 let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport');
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
+let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
 let outputPath = path.resolve(__dirname, './reports');
 
@@ -27,6 +29,9 @@ if (argv.r) {
 }
 if (argv.d) {
   requestDetailDirPath = path.resolve(currWorkingPath, argv.d);
+}
+if (argv.v) {
+  prevPendingReqsPath = path.resolve(currWorkingPath, argv.v);
 }
 if (argv.p) {
   pricesDirPath = path.resolve(currWorkingPath, argv.p);
@@ -47,52 +52,75 @@ console.log(`Output Dir: ${outputPath}`);
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 
-mkpath.sync(outputPath);
+const debugFileDirPath = path.resolve(outputPath, './debug');
+if (enableDebugFile) {
+  mkpath.sync(debugFileDirPath);
+} else {
+  mkpath.sync(outputPath);
+}
 
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
     console.log('\nImporting price list succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(outputPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceList.json', err);
         }
       });
     }
-    
+
+    const prevPendingReqs = importPreviousPendingRequests(prevPendingReqsPath);
+    console.log('Importing previous pending requests succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './previousPendingRequests.json'), JSON.stringify(prevPendingReqs, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: previousPendingRequests.json', err);
+        }
+      });
+    }
 
     const reqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
     console.log('Importing blockchain query data succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(outputPath, './queryDataJson.json'), JSON.stringify(reqData, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(reqData, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: queryDataJson.json', err);
         }
       });
     }
 
-    const settlement = categorizedRequests(reqData);
+    const categorizedReqs = categorizeRequests(reqData);
     console.log('Calculating settlement succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(outputPath, './settlement.json'), JSON.stringify(settlement, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: settlement.json', err);
         }
       });
     }
 
-    const settlementWithPrice = createSummaryReport(settlement, priceList);
+    const settlementWithPrice = createSummaryReport(categorizedReqs.finishedRequests, priceList);
     console.log('Calculating price for settlement succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(outputPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: settlementWithPrice.json', err);
         }
       });
     }
 
-    genCSV(settlementWithPrice, outputPath);
-    console.log(`\nSettlement report (.csv) files have been created at ${outputPath}`);
+    // Generate pending requests JSON file
+    fs.writeFile(path.join(outputPath, './pendingRequests.json'), JSON.stringify(categorizedReqs.pendingRequests, null, 2), (err) => {
+      if (err) {
+        throw err;
+      }
+    });
+    console.log(`\npendingRequest.json have been created at ${outputPath}`);
+
+
+    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, outputPath);
+    console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
 
     console.log('\nGenerating settlement reports succeeded.');
   });

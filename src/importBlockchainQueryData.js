@@ -24,7 +24,6 @@ function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, min
 
   const data = {};
   details
-    .filter(detail => detail.timed_out || detail.closed)
     .forEach((detail) => {
       const reqInfo = {};
       reqInfo.detail = detail;

@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 // const checkConditionDetail = {
 //   statusAcceptGreaterThanOrEqualMinIdp: (responseList, minIdp) => {
 //     let count = 0;
@@ -67,6 +69,10 @@ function getSettlementReqStatus(reqDetail) {
     return 'Timeout';
   }
 
+  if (!reqDetail.timed_out && !reqDetail.closed) {
+    return 'Pending';
+  }
+
   const haveUnsuccessfulDataReq = reqDetail.data_request_list && reqDetail
     .data_request_list
     .find(dataReqInfo =>
@@ -85,14 +91,40 @@ function getSettlementReqStatus(reqDetail) {
   return validIdpResponseList.length >= reqDetail.min_idp ? 'Complete' : 'Close';
 }
 
-function categorizedRequests(objData) {
+function categorizeRequests(currReqs, prevPendingReqs = {}) {
   let settlement = {};
   let requester_node_id = 0;
-  Object.keys(objData).forEach((rootName) => {    
+  const finishedRequests = {};
+  const pendingRequests = {};
+  const currReqIds = Object.keys(currReqs);
+
+  // Forward prev pending requests which still be pending in the block height range
+  Object
+    .keys(prevPendingReqs)
+    .filter(reqId => !currReqIds.includes(reqId))
+    .forEach((reqId) => {
+      pendingRequests[reqId] = prevPendingReqs[reqId];
+    });
+
+  // Merge prev pending requests into the current block height range's one if possible
+  Object
+    .keys(prevPendingReqs)
+    .filter(reqId => currReqIds.includes(reqId))
+    .forEach((reqId) => {
+      const prevPendReq = prevPendingReqs[reqId];
+      const currReq = currReqs[reqId];
+      currReq.steps = [
+        ...prevPendReq.steps,
+        ...currReq.steps,
+      ];
+    });
+
+  currReqIds.forEach((reqId) => {
+    const { steps, detail } = currReqs[reqId];
+    const { request_id } = detail;
+
     const idpList = [];
     const asList = [];
-    const { request_id } = objData[rootName].detail;
-    const { steps, detail } = objData[rootName];
     let height;
     steps.forEach((dataInSteps) => {
       if (dataInSteps.method === 'CreateRequest') {
@@ -123,12 +155,16 @@ function categorizedRequests(objData) {
     });
 
     // Request to an IdP but there is no CreateIdpReponse according to it
-    const notAnswerIdpNodeIds = detail.idp_id_list.filter(nodeId => !idpList.map(idpSettlementInfo => idpSettlementInfo.idp_id).includes(nodeId));
-    idpList.push(...notAnswerIdpNodeIds.map(nodeId => ({ idp_id: nodeId, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0 })));
+    const notAnswerIdpNodeIds = detail.idp_id_list
+      .filter(nodeId =>
+        !idpList.map(idpSettlementInfo => idpSettlementInfo.idp_id).includes(nodeId));
+    idpList.push(...notAnswerIdpNodeIds.map(nodeId => ({
+      idp_id: nodeId, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0,
+    })));
 
     asList.push(...detail.data_request_list
       .filter(dataReq => dataReq.answered_as_id_list.length > 0)
-      .map(dataReq => dataReq.answered_as_id_list.map(asId => ({ 
+      .map(dataReq => dataReq.answered_as_id_list.map(asId => ({
         as_id: asId,
         service_id: dataReq.service_id,
       })))
@@ -142,10 +178,18 @@ function categorizedRequests(objData) {
       asList,
       status: getSettlementReqStatus(detail),
     };
-    objData[rootName] = { ...objData[rootName], settlement };
+
+    if (settlement.status === 'Pending') {
+      pendingRequests[reqId] = { ...currReqs[reqId], settlement };
+    } else {
+      finishedRequests[reqId] = { ...currReqs[reqId], settlement };
+    }
   });
 
-  return objData;
+  return {
+    finishedRequests,
+    pendingRequests,
+  };
 }
 
-module.exports.categorizedRequests = categorizedRequests;
+module.exports = { categorizeRequests };
