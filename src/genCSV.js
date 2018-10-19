@@ -207,6 +207,10 @@ const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 
+function heightCompare(rowA, rowB) {
+  return rowA.height - rowB.height;
+}
+
 function getNodeName(aNodeInfo = {}) {
   return aNodeInfo.node_name;
 }
@@ -391,7 +395,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
   const allPendingReqRows = allPendingReqIds
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
     .reduce((prev, curr) => prev.concat(curr), []);
-  createFile(pendingParser.parse(allPendingReqRows), 'csv/pending.csv', outputDirPath);
+  createFile(pendingParser.parse(allPendingReqRows.sort(heightCompare)), 'csv/pending.csv', outputDirPath);
 
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
@@ -414,7 +418,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
         rpIdp.push(row);
       }
     });
-    const csv = rpIdpParser.parse(rpIdp);
+    const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
     createFile(csv, `csv/rp-idp/${id}.csv`, outputDirPath);
 
     const idp = [];
@@ -425,7 +429,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     });
     genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, nodeInfo, outputDirPath);
 
-    const rpNdidCsv = rpNdidParser.parse(allRows.rpNdid.filter(row => id === row.rp_id));
+    const rpNdidCsv = rpNdidParser.parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
     createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
 
     genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
@@ -438,7 +442,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
         idpRp.push(row);
       }
     });
-    const csv = rpIdpParser.parse(idpRp);
+    const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
     createFile(csv, `csv/idp-rp/${id}.csv`, outputDirPath);
 
     const rp = [];
@@ -457,7 +461,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
         rpAs.push(row);
       }
     });
-    const csv = rpAsParser.parse(rpAs);
+    const csv = rpAsParser.parse(rpAs.sort(heightCompare));
     createFile(csv, `csv/rp-as/${id}.csv`, outputDirPath);
 
     const asList = [];
@@ -480,7 +484,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
         asRp.push(row);
       }
     });
-    const csv = rpAsParser.parse(asRp);
+    const csv = rpAsParser.parse(asRp.sort(heightCompare));
     createFile(csv, `csv/as-rp/${id}.csv`, outputDirPath);
 
     const asList = [];
