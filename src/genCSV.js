@@ -15,6 +15,9 @@ const fieldsPending = [
     label: 'RP Node ID',
     value: 'rp_id',
   }, {
+    label: 'RP Node Name',
+    value: 'rp_name',
+  }, {
     label: 'Request ID',
     value: 'request_id',
   }, {
@@ -27,6 +30,9 @@ const fieldsPending = [
     label: 'IdP Node IDs',
     value: 'idp_ids',
   }, {
+    label: 'IdP Node Names',
+    value: 'idp_names',
+  }, {
     label: 'Requested IAL',
     value: 'ial',
   }, {
@@ -38,6 +44,9 @@ const fieldsPending = [
   }, {
     label: 'AS Node IDs',
     value: 'as_ids',
+  }, {
+    label: 'AS Node Names',
+    value: 'as_names',
   },
 ];
 
@@ -45,7 +54,12 @@ const fieldsRpIdp = [
   {
     label: 'RP Node ID',
     value: 'rp_id',
-  }, {
+  },
+  {
+    label: 'RP Node Name',
+    value: 'rp_name',
+  },
+  {
     label: 'Request ID',
     value: 'request_id',
   }, {
@@ -57,6 +71,9 @@ const fieldsRpIdp = [
   }, {
     label: 'IdP Node ID',
     value: 'idp_id',
+  }, {
+    label: 'IdP Node Name',
+    value: 'idp_name',
   }, {
     label: 'Requested IAL',
     value: 'ial',
@@ -79,8 +96,14 @@ const fieldsRpIdpSummary = [
     label: 'RP Node ID',
     value: 'rpId',
   }, {
+    label: 'RP Node Name',
+    value: 'rpName',
+  }, {
     label: 'IdP Node ID',
     value: 'idpId',
+  }, {
+    label: 'IdP Node Name',
+    value: 'idpName',
   }, {
     label: 'IdP Price',
     value: 'idpPrice',
@@ -91,6 +114,9 @@ const fieldsRpAs = [
   {
     label: 'RP Node ID',
     value: 'rp_id',
+  }, {
+    label: 'RP Node Name',
+    value: 'rp_name',
   }, {
     label: 'Request ID',
     value: 'request_id',
@@ -104,6 +130,9 @@ const fieldsRpAs = [
     label: 'AS Node ID',
     value: 'as_id',
   }, {
+    label: 'AS Node Name',
+    value: 'as_name',
+  }, {
     label: 'AS Service ID',
     value: 'service_id',
   }, {
@@ -116,8 +145,14 @@ const fieldsRpAsSummary = [
     label: 'RP Node ID',
     value: 'rpId',
   }, {
+    label: 'RP Node Name',
+    value: 'rpName',
+  }, {
     label: 'AS Node ID',
     value: 'asId',
+  }, {
+    label: 'AS Node Name',
+    value: 'asName',
   }, {
     label: 'AS Service ID',
     value: 'serviceId',
@@ -131,6 +166,9 @@ const fieldsRpNdid = [
   {
     label: 'RP Node ID',
     value: 'rp_id',
+  }, {
+    label: 'RP Node Name',
+    value: 'rp_name',
   }, {
     label: 'Request ID',
     value: 'request_id',
@@ -150,6 +188,9 @@ const fieldsRpNdidSummary = [
     label: 'RP Node ID',
     value: 'rpId',
   }, {
+    label: 'RP Node Name',
+    value: 'rpName',
+  }, {
     label: 'NDID Price',
     value: 'ndidPrice',
   },
@@ -166,36 +207,49 @@ const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 
-function genRowsFromPendingRequest(req) {
+function getNodeName(aNodeInfo = {}) {
+  return aNodeInfo.node_name;
+}
+
+function getNodeNames(nodeInfo, nodeIds) {
+  return nodeIds.map(id => getNodeName(nodeInfo[id])).join(', ');
+}
+
+function genRowsFromPendingRequest(req, nodeInfo) {
   const { detail, settlement } = req;
 
   const rows = (detail.data_request_list.length > 0 ? detail.data_request_list : [{}])
     .map(({ as_id_list = [], service_id = '' }) => ({
       rp_id: settlement.requester_node_id,
+      rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
       request_id: settlement.request_id,
       status: settlement.status,
       height: settlement.height,
       idp_ids: detail.idp_id_list.join(', '),
+      idp_names: getNodeNames(nodeInfo, detail.idp_id_list),
       ial: detail.min_ial,
       aal: detail.min_aal,
       service_id,
       as_ids: as_id_list.join(', '),
+      as_names: getNodeNames(nodeInfo, as_id_list),
     }));
 
   return rows;
 }
 
-function genRowsFromRequest(req) {
+function genRowsFromRequest(req, nodeInfo) {
   const { settlement } = req;
 
   const rpIdp = [];
   settlement.idpList.forEach((item) => {
     const request = {};
     request.rp_id = settlement.requester_node_id;
+    request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.height = settlement.height;
     request.idp_id = item.idp_id;
+    request.idp_name = getNodeName(nodeInfo[item.idp_id]);
     request.ial = item.ial;
     request.aal = item.aal;
     request.response = item.status;
@@ -209,10 +263,12 @@ function genRowsFromRequest(req) {
   settlement.asList.forEach((item) => {
     const request = {};
     request.rp_id = settlement.requester_node_id;
+    request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.height = settlement.height;
     request.as_id = item.as_id;
+    request.as_name = getNodeName(nodeInfo[item.as_id]);
     request.service_id = item.service_id;
     request.price = _.round(item.as_price, 6);
 
@@ -221,6 +277,7 @@ function genRowsFromRequest(req) {
 
   const rpNdid = [{
     rp_id: settlement.requester_node_id,
+    rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
     request_id: settlement.request_id,
     status: settlement.status,
     height: settlement.height,
@@ -261,18 +318,20 @@ function getNodeList(allRows) {
 function createFile(csv, filePathInOutputDir, outputDirPath) {
   const filePath = join(outputDirPath, filePathInOutputDir);
   mkpath.sync(filePath.substring(0, filePath.lastIndexOf('/')));
-  fs.writeFile(filePath, csv, (err) => {
+  fs.writeFile(filePath, `\ufeff${csv}`, 'utf8', (err) => {
     if (err) throw err;
   });
 }
 
-function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
+function genSummaryRpIdp(path, requests, nodeIdList, nodeInfo, outputDirPath) {
   const summary = [];
   nodeIdList.forEach((id) => {
     const filter = requests.filter(item => item.idp_id === id);
     const sum = filter.reduce((prev, curr) => ({
       rpId: curr.rp_id,
+      rpName: getNodeName(nodeInfo[curr.rp_id]),
       idpId: curr.idp_id,
+      idpName: getNodeName(nodeInfo[curr.idp_id]),
       idpPrice: prev.idpPrice + curr.price,
     }), {
       idpPrice: 0,
@@ -284,7 +343,7 @@ function genSummaryRpIdp(path, requests, nodeIdList, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
+function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, outputDirPath) {
   const summary = [];
   checkDataList.forEach((checkData) => {
     const filter = requests.filter((item) => {
@@ -295,7 +354,9 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
     });
     const sumRpAs = filter.reduce((prev, curr) => ({
       rpId: curr.rp_id,
+      rpName: getNodeName(nodeInfo[curr.rp_id]),
       asId: curr.as_id,
+      asName: getNodeName(nodeInfo[curr.as_id]),
       serviceId: curr.service_id,
       asPrice: prev.asPrice + curr.price,
     }), {
@@ -308,12 +369,13 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genSummaryRpNdid(path, requests, rpId, outputDirPath) {
+function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
   const summary = [
     requests
       .filter(req => req.rp_id === rpId)
       .reduce((prev, curr) => ({
         rpId: curr.rp_id,
+        rpName: getNodeName(nodeInfo[curr.rp_id]),
         ndidPrice: prev.ndidPrice + curr.price,
       }), {
         ndidPrice: 0,
@@ -324,16 +386,16 @@ function genSummaryRpNdid(path, requests, rpId, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
+function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
   const allPendingReqIds = Object.keys(pendingRequests);
   const allPendingReqRows = allPendingReqIds
-    .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId]))
+    .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
     .reduce((prev, curr) => prev.concat(curr), []);
   createFile(pendingParser.parse(allPendingReqRows), 'csv/pending.csv', outputDirPath);
 
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
-    .map(reqId => genRowsFromRequest(settlementWithPrice[reqId]))
+    .map(reqId => genRowsFromRequest(settlementWithPrice[reqId], nodeInfo))
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
       rpAs: prev.rpAs.concat(curr.rpAs),
@@ -361,12 +423,12 @@ function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
         idp.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, outputDirPath);
+    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, nodeInfo, outputDirPath);
 
     const rpNdidCsv = rpNdidParser.parse(allRows.rpNdid.filter(row => id === row.rp_id));
     createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
 
-    genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, outputDirPath);
+    genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
   });
 
   nodeList.idpList.forEach((id) => {
@@ -385,7 +447,7 @@ function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
         rp.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, outputDirPath);
+    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, nodeInfo, outputDirPath);
   });
 
   nodeList.rpList.forEach((id) => {
@@ -408,7 +470,7 @@ function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, outputDirPath);
+    genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputDirPath);
   });
 
   nodeList.asList.forEach((id) => {
@@ -431,7 +493,7 @@ function genCSV(settlementWithPrice, pendingRequests, outputDirPath) {
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, outputDirPath);
+    genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputDirPath);
   });
 }
 

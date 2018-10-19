@@ -8,11 +8,14 @@ services:
       - QUERY_SETTLEMENT=${QUERY_SETTLEMENT:-YES}
       - MIN_BLOCK_HEIGHT=${MIN_BLOCK_HEIGHT}
       - MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
+      - START_BLOCK=${MIN_BLOCK_HEIGHT}
+      - END_BLOCK=${MIN_BLOCK_HEIGHT}
     security_opt:
       - no-new-privileges
     volumes:
-      - ./settlement/GetUsedTokenReport:/GetUsedTokenReport
-      - ./settlement/RequestDetail:/RequestDetail
-      - ./settlement/Reports:/Reports
+      - ./settlement/${DATETIME:-result}/NodeInfo:/NodeInfo
+      - ./settlement/${DATETIME:-result}/GetUsedTokenReport:/GetUsedTokenReport
+      - ./settlement/${DATETIME:-result}/RequestDetail:/RequestDetail
+      - ./settlement/${DATETIME:-result}/Reports:/Reports
       - ./settlement/Prices:/Prices
     network_mode: "host"

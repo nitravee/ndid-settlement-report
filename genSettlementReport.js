@@ -2,6 +2,7 @@ const { argv } = require('yargs');
 const path = require('path');
 const fs = require('fs');
 const mkpath = require('mkpath');
+const { importNodeInfo } = require('./src/importNodeInfo');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
@@ -11,6 +12,7 @@ const { genCSV } = require('./src/genCSV');
 
 let minHeight;
 let maxHeight;
+let nodeInfoDirPath = path.resolve(__dirname, './data/NodeInfo');
 let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport');
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
@@ -23,6 +25,9 @@ if (argv.b) {
 }
 if (argv.e) {
   maxHeight = parseInt(argv.e, 10);
+}
+if (argv.i) {
+  nodeInfoDirPath = path.resolve(currWorkingPath, argv.i);
 }
 if (argv.r) {
   usedTokenReportDirPath = path.resolve(currWorkingPath, argv.r);
@@ -44,7 +49,8 @@ const enableDebugFile = argv['debug-file'];
 
 console.log('Started generating settlement reports.');
 
-console.log(`\nGetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
+console.log(`\nNodeInfo Dir: ${nodeInfoDirPath}`);
+console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
 console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
 console.log(`Prices Dir: ${pricesDirPath}`);
 console.log(`Output Dir: ${outputPath}`);
@@ -66,6 +72,16 @@ importPriceListDirectories(pricesDirPath)
       fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceList.json', err);
+        }
+      });
+    }
+
+    const nodeInfo = importNodeInfo(nodeInfoDirPath);
+    console.log('Importing previous pending requests succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: nodeInfo.json', err);
         }
       });
     }
@@ -119,7 +135,7 @@ importPriceListDirectories(pricesDirPath)
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
 
 
-    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, outputPath);
+    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, outputPath);
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
 
     console.log('\nGenerating settlement reports succeeded.');
