@@ -138,6 +138,9 @@ const fieldsRpAs = [
   }, {
     label: 'AS Price',
     value: 'price',
+  }, {
+    label: 'AS Full Price',
+    value: 'full_price',
   },
 ];
 const fieldsRpAsSummary = [
@@ -275,6 +278,7 @@ function genRowsFromRequest(req, nodeInfo) {
     request.as_name = getNodeName(nodeInfo[item.as_id]);
     request.service_id = item.service_id;
     request.price = _.round(item.as_price, 6);
+    request.full_price = _.round(item.as_full_price, 6);
 
     rpAs.push(request);
   });

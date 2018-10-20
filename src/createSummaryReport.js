@@ -261,12 +261,13 @@ function createSummaryReport(objData, priceList) {
          const {aal, ial, idp_id,} = dataInIdpList
          idp_full_price = scopedPriceList['idp'][idp_id][aal][ial];
          idp_price = (idp_full_price)*(dataInIdpList.idp_fee_ratio)
-         result[rootName].settlement.idpList[index] = {...dataInIdpList,idp_price,idp_full_price}
+         result[rootName].settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price }
      });
      result[rootName].settlement.asList.forEach((dataInAsList,index) => {  
        const {as_id, service_id} = dataInAsList  
       as_price = scopedPriceList['as'][as_id][service_id];
-      result[rootName].settlement.asList[index] = {...dataInAsList,as_price}
+      as_full_price = scopedPriceList['as'][as_id][service_id];
+      result[rootName].settlement.asList[index] = { ...dataInAsList, as_price, as_full_price }
     });
   }
 
