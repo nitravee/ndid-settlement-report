@@ -251,22 +251,22 @@ function createSummaryReport(objData, priceList) {
 
   for(let rootName in result) {
     const scopedPriceList = priceList
-        .filter(item => {
-          if (item['max_block_height'] == null) {
-            return result[rootName].settlement.height >= item['min_block_height'];
+        .filter((item) => {
+          if (item.max_block_height == null) {
+            return result[rootName].settlement.height >= item.min_block_height;
           }
-          return result[rootName].settlement.height >= item['min_block_height'] && result[rootName].settlement.height <= item['max_block_height'];
+          return result[rootName].settlement.height >= item.min_block_height && result[rootName].settlement.height <= item.max_block_height;
         })[0]['prices'];
         result[rootName].settlement.idpList.forEach((dataInIdpList,index) => {
-         const {aal, ial, idp_id,} = dataInIdpList
-         idp_full_price = scopedPriceList['idp'][idp_id][aal][ial];
-         idp_price = (idp_full_price)*(dataInIdpList.idp_fee_ratio)
-         result[rootName].settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price }
-     });
-     result[rootName].settlement.asList.forEach((dataInAsList,index) => {  
-       const {as_id, service_id} = dataInAsList  
-      as_price = scopedPriceList['as'][as_id][service_id];
+        const {aal, ial, idp_id,} = dataInIdpList
+        idp_full_price = scopedPriceList['idp'][idp_id][aal][ial];
+        idp_price = idp_full_price * dataInIdpList.idp_fee_ratio;
+        result[rootName].settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price };
+    });
+    result[rootName].settlement.asList.forEach((dataInAsList,index) => {  
+      const { as_id, service_id, as_fee_ratio } = dataInAsList;
       as_full_price = scopedPriceList['as'][as_id][service_id];
+      as_price = as_full_price * as_fee_ratio;
       result[rootName].settlement.asList[index] = { ...dataInAsList, as_price, as_full_price }
     });
   }

@@ -136,6 +136,12 @@ const fieldsRpAs = [
     label: 'AS Service ID',
     value: 'service_id',
   }, {
+    label: 'Data Answered',
+    value: 'data_answered',
+  }, {
+    label: 'Data Received',
+    value: 'data_received',
+  }, {
     label: 'AS Price',
     value: 'price',
   }, {
@@ -277,6 +283,8 @@ function genRowsFromRequest(req, nodeInfo) {
     request.as_id = item.as_id;
     request.as_name = getNodeName(nodeInfo[item.as_id]);
     request.service_id = item.service_id;
+    request.data_answered = item.data_answered ? 'Yes' : 'No';
+    request.data_received = item.data_received ? 'Yes' : 'No';
     request.price = _.round(item.as_price, 6);
     request.full_price = _.round(item.as_full_price, 6);
 

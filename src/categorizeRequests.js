@@ -163,11 +163,16 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
     })));
 
     asList.push(...detail.data_request_list
-      .filter(dataReq => dataReq.answered_as_id_list.length > 0)
-      .map(dataReq => dataReq.answered_as_id_list.map(asId => ({
-        as_id: asId,
-        service_id: dataReq.service_id,
-      })))
+      .map(dataReq => dataReq.as_id_list.map((asId) => {
+        const dataAnswered = dataReq.answered_as_id_list.includes(asId);
+        return {
+          as_id: asId,
+          service_id: dataReq.service_id,
+          data_answered: dataAnswered,
+          data_received: dataReq.received_data_from_list.includes(asId),
+          as_fee_ratio: dataAnswered ? 1.0 : 0.0,
+        };
+      }))
       .reduce((prev, curr) => prev.concat(curr), []));
 
     settlement = {
