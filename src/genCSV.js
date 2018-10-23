@@ -27,6 +27,9 @@ const fieldsPending = [
     label: 'Created Block Height',
     value: 'height',
   }, {
+    label: 'Mode',
+    value: 'mode',
+  }, {
     label: 'IdP Node IDs',
     value: 'idp_ids',
   }, {
@@ -69,6 +72,9 @@ const fieldsRpIdp = [
     label: 'Created Block Height',
     value: 'height',
   }, {
+    label: 'Mode',
+    value: 'mode',
+  }, {
     label: 'IdP Node ID',
     value: 'idp_id',
   }, {
@@ -83,6 +89,12 @@ const fieldsRpIdp = [
   }, {
     label: 'IdP Response',
     value: 'response',
+  }, {
+    label: 'Valid IdP Response Signature',
+    value: 'valid_idp_response_signature',
+  }, {
+    label: 'Valid IdP Response IAL',
+    value: 'valid_idp_response_ial',
   }, {
     label: 'IdP Price',
     value: 'price',
@@ -126,6 +138,9 @@ const fieldsRpAs = [
   }, {
     label: 'Created Block Height',
     value: 'height',
+  }, {
+    label: 'Mode',
+    value: 'mode',
   }, {
     label: 'AS Node ID',
     value: 'as_id',
@@ -188,6 +203,9 @@ const fieldsRpNdid = [
     label: 'Created Block Height',
     value: 'height',
   }, {
+    label: 'Mode',
+    value: 'mode',
+  }, {
     label: 'NDID Price',
     value: 'price',
   },
@@ -238,6 +256,7 @@ function genRowsFromPendingRequest(req, nodeInfo) {
       request_id: settlement.request_id,
       status: settlement.status,
       height: settlement.height,
+      mode: settlement.mode,
       idp_ids: detail.idp_id_list.join(', '),
       idp_names: getNodeNames(nodeInfo, detail.idp_id_list),
       ial: detail.min_ial,
@@ -261,11 +280,25 @@ function genRowsFromRequest(req, nodeInfo) {
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.height = settlement.height;
+    request.mode = settlement.mode;
     request.idp_id = item.idp_id;
     request.idp_name = getNodeName(nodeInfo[item.idp_id]);
     request.ial = item.ial;
     request.aal = item.aal;
     request.response = item.status;
+
+    if (item.valid_signature == null) {
+      request.valid_idp_response_signature = 'N/A';
+    } else {
+      request.valid_idp_response_signature = item.valid_signature === true ? 'Yes' : 'No';
+    }
+
+    if (item.valid_ial == null) {
+      request.valid_idp_response_ial = 'N/A';
+    } else {
+      request.valid_idp_response_ial = item.valid_ial === true ? 'Yes' : 'No';
+    }
+
     request.price = _.round(item.idp_price, 6);
     request.full_price = _.round(item.idp_full_price, 6);
 
@@ -280,6 +313,7 @@ function genRowsFromRequest(req, nodeInfo) {
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.height = settlement.height;
+    request.mode = settlement.mode;
     request.as_id = item.as_id;
     request.as_name = getNodeName(nodeInfo[item.as_id]);
     request.service_id = item.service_id;
@@ -297,6 +331,7 @@ function genRowsFromRequest(req, nodeInfo) {
     request_id: settlement.request_id,
     status: settlement.status,
     height: settlement.height,
+    mode: settlement.mode,
     price: NDID_PRICE_PER_REQ,
   }];
 

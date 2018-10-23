@@ -65,6 +65,8 @@ const _ = require('lodash');
 // };
 
 function getSettlementReqStatus(reqDetail) {
+  // TODO: Revise req status
+
   if (reqDetail.timed_out) {
     return 'Timeout';
   }
@@ -140,12 +142,16 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
                 ial,
                 aal,
                 idp_id,
+                valid_signature,
+                valid_ial,
               } = dataInResponse;
               idpList.push({
                 idp_id,
                 status,
                 ial,
                 aal,
+                valid_signature,
+                valid_ial,
                 idp_fee_ratio,
               });
             }
@@ -181,6 +187,9 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
       height,
       idpList,
       asList,
+      mode: detail.mode,
+      closed: detail.closed,
+      timedOut: detail.timed_out,
       status: getSettlementReqStatus(detail),
     };
 
