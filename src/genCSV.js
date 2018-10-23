@@ -24,6 +24,12 @@ const fieldsPending = [
     label: 'Request Status',
     value: 'status',
   }, {
+    label: 'Closed',
+    value: 'closed',
+  }, {
+    label: 'Timed out',
+    value: 'timed_out',
+  }, {
     label: 'Created Block Height',
     value: 'height',
   }, {
@@ -68,6 +74,12 @@ const fieldsRpIdp = [
   }, {
     label: 'Request Status',
     value: 'status',
+  }, {
+    label: 'Closed',
+    value: 'closed',
+  }, {
+    label: 'Timed out',
+    value: 'timed_out',
   }, {
     label: 'Created Block Height',
     value: 'height',
@@ -136,6 +148,12 @@ const fieldsRpAs = [
     label: 'Request Status',
     value: 'status',
   }, {
+    label: 'Closed',
+    value: 'closed',
+  }, {
+    label: 'Timed out',
+    value: 'timed_out',
+  }, {
     label: 'Created Block Height',
     value: 'height',
   }, {
@@ -200,6 +218,12 @@ const fieldsRpNdid = [
     label: 'Request Status',
     value: 'status',
   }, {
+    label: 'Closed',
+    value: 'closed',
+  }, {
+    label: 'Timed out',
+    value: 'timed_out',
+  }, {
     label: 'Created Block Height',
     value: 'height',
   }, {
@@ -255,6 +279,8 @@ function genRowsFromPendingRequest(req, nodeInfo) {
       rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
       request_id: settlement.request_id,
       status: settlement.status,
+      closed: settlement.closed ? 'Yes' : 'No',
+      timed_out: settlement.timed_out ? 'Yes' : 'No',
       height: settlement.height,
       mode: settlement.mode,
       idp_ids: detail.idp_id_list.join(', '),
@@ -279,6 +305,8 @@ function genRowsFromRequest(req, nodeInfo) {
     request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
+    request.closed = settlement.closed ? 'Yes' : 'No';
+    request.timed_out = settlement.timed_out ? 'Yes' : 'No';
     request.height = settlement.height;
     request.mode = settlement.mode;
     request.idp_id = item.idp_id;
@@ -312,6 +340,8 @@ function genRowsFromRequest(req, nodeInfo) {
     request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
+    request.closed = settlement.closed ? 'Yes' : 'No';
+    request.timed_out = settlement.timed_out ? 'Yes' : 'No';
     request.height = settlement.height;
     request.mode = settlement.mode;
     request.as_id = item.as_id;
@@ -330,6 +360,8 @@ function genRowsFromRequest(req, nodeInfo) {
     rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
     request_id: settlement.request_id,
     status: settlement.status,
+    closed: settlement.closed ? 'Yes' : 'No',
+    timed_out: settlement.timed_out ? 'Yes' : 'No',
     height: settlement.height,
     mode: settlement.mode,
     price: NDID_PRICE_PER_REQ,

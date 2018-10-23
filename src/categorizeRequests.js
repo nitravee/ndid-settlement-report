@@ -65,32 +65,96 @@ const _ = require('lodash');
 // };
 
 function getSettlementReqStatus(reqDetail) {
-  // TODO: Revise req status
-
-  if (reqDetail.timed_out) {
-    return 'Timeout';
+  const requestDetail = Object.assign({}, reqDetail);
+  if (requestDetail.data_request_list == null) {
+    requestDetail.data_request_list = [];
+  }
+  if (requestDetail.response_list == null) {
+    requestDetail.response_list = [];
   }
 
-  if (!reqDetail.timed_out && !reqDetail.closed) {
-    return 'Pending';
+  let status;
+  if (requestDetail.response_list.length === 0) {
+    status = 'Pending';
+  }
+  // Check response's status
+  const responseCount = requestDetail.response_list.reduce(
+    (count, response) => {
+      const newCount = Object.assign({}, count);
+      if (response.status === 'accept') {
+        newCount.accept = count.accept + 1;
+      } else if (response.status === 'reject') {
+        newCount.reject = count.reject + 1;
+      }
+      return newCount;
+    },
+    {
+      accept: 0,
+      reject: 0,
+    },
+  );
+  if (responseCount.accept > 0 && responseCount.reject === 0) {
+    status = 'Confirmed';
+  } else if (responseCount.accept === 0 && responseCount.reject > 0) {
+    status = 'Rejected';
+  } else if (responseCount.accept > 0 && responseCount.reject > 0) {
+    status = 'Complicated';
   }
 
-  const haveUnsuccessfulDataReq = reqDetail.data_request_list && reqDetail
-    .data_request_list
-    .find(dataReqInfo =>
-      dataReqInfo.received_data_from_list.length < dataReqInfo.min_as) !== undefined;
+  const serviceList = requestDetail.data_request_list.map((service) => {
+    const signedAnswerCount =
+      service.answered_as_id_list != null
+        ? service.answered_as_id_list.length
+        : 0;
+    const receivedDataCount =
+      service.received_data_from_list != null
+        ? service.received_data_from_list.length
+        : 0;
+    return {
+      service_id: service.service_id,
+      min_as: service.min_as,
+      signed_data_count: signedAnswerCount,
+      received_data_count: receivedDataCount,
+    };
+  });
 
-  if (haveUnsuccessfulDataReq) {
-    return 'Close';
+  if (requestDetail.data_request_list.length === 0) {
+    // No data request
+    if (requestDetail.response_list.length === requestDetail.min_idp) {
+      if (
+        responseCount.reject === 0
+        && (responseCount.accept > 0
+            || (responseCount.accept === 0
+                && requestDetail.purpose === 'AddAccessor'))
+      ) {
+        status = 'Completed';
+      }
+    }
+  } else if (requestDetail.data_request_list.length > 0) {
+    const asSignedAnswerCount = serviceList.reduce(
+      (total, service) => ({
+        count: total.count + service.min_as,
+        signedAnswerCount: total.signedAnswerCount + service.signed_data_count,
+        receivedDataCount:
+          total.receivedDataCount + service.received_data_count,
+      }),
+      {
+        count: 0,
+        signedAnswerCount: 0,
+        receivedDataCount: 0,
+      },
+    );
+
+    if (
+      asSignedAnswerCount.count === asSignedAnswerCount.signedAnswerCount &&
+      asSignedAnswerCount.signedAnswerCount ===
+        asSignedAnswerCount.receivedDataCount
+    ) {
+      status = 'Completed';
+    }
   }
 
-  const validIdpResponseList = reqDetail.response_list ? reqDetail
-    .response_list
-    .filter(idpResp => idpResp.valid_proof !== false
-      && idpResp.valid_signature !== false
-      && idpResp.valid_ial !== false) : [];
-
-  return validIdpResponseList.length >= reqDetail.min_idp ? 'Complete' : 'Close';
+  return status;
 }
 
 function categorizeRequests(currReqs, prevPendingReqs = {}) {
@@ -189,11 +253,11 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
       asList,
       mode: detail.mode,
       closed: detail.closed,
-      timedOut: detail.timed_out,
+      timed_out: detail.timed_out,
       status: getSettlementReqStatus(detail),
     };
 
-    if (settlement.status === 'Pending') {
+    if (!settlement.closed && !settlement.timed_out) {
       pendingRequests[reqId] = { ...currReqs[reqId], settlement };
     } else {
       finishedRequests[reqId] = { ...currReqs[reqId], settlement };
