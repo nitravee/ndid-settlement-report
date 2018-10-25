@@ -20,7 +20,7 @@ node ./settlement-report/genSettlementReport \
   -r ./GetUsedTokenReport/ \
   -d ./RequestDetail/ \
   -p ./Prices/ \
-  -v ./pendingRequests.json
+  -v ./pendingRequests.json \
   -b "${MIN_BLOCK_HEIGHT}" \
   -e "${MAX_BLOCK_HEIGHT}" \
   -o ./Reports
