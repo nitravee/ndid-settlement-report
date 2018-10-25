@@ -18,4 +18,5 @@ services:
       - ./settlement/${DATETIME:-result}/RequestDetail:/RequestDetail
       - ./settlement/${DATETIME:-result}/Reports:/Reports
       - ./settlement/Prices:/Prices
+      - ${PENDING_REQS_PATH:-./settlement/pendingRequests.json}:/pendingRequests.json
     network_mode: "host"
