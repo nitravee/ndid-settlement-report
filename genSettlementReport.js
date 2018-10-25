@@ -53,6 +53,7 @@ console.log(`\nNodeInfo Dir: ${nodeInfoDirPath}`);
 console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
 console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
 console.log(`Prices Dir: ${pricesDirPath}`);
+console.log(`pendingRequests.json Path: ${prevPendingReqsPath}`);
 console.log(`Output Dir: ${outputPath}`);
 
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
@@ -77,7 +78,7 @@ importPriceListDirectories(pricesDirPath)
     }
 
     const nodeInfo = importNodeInfo(nodeInfoDirPath);
-    console.log('Importing previous pending requests succeeded.');
+    console.log('Importing node info succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
         if (err) {

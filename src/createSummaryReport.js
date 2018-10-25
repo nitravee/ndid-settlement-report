@@ -241,6 +241,16 @@ const _ = require('lodash');
 //     }
 // }
 
+function getIdpFullPrice(idpPriceList, nodeId, aal, ial) {
+  const nodePriceList = idpPriceList[nodeId] || {};
+  return (nodePriceList[aal] && nodePriceList[aal][ial]) || 0;
+}
+
+function getAsFullPrice(asPriceList, nodeId, serviceId) {
+  const nodePriceList = asPriceList[nodeId] || {};
+  return nodePriceList[serviceId] || 0;
+}
+
 function createSummaryReport(objData, priceList) {
   let idp_price = 0;
   let idp_full_price = 0;
@@ -259,13 +269,13 @@ function createSummaryReport(objData, priceList) {
         })[0]['prices'];
         result[rootName].settlement.idpList.forEach((dataInIdpList,index) => {
         const {aal, ial, idp_id,} = dataInIdpList
-        idp_full_price = scopedPriceList['idp'][idp_id][aal][ial];
+        idp_full_price = getIdpFullPrice(scopedPriceList['idp'], idp_id, aal, ial);
         idp_price = idp_full_price * dataInIdpList.idp_fee_ratio;
         result[rootName].settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price };
     });
     result[rootName].settlement.asList.forEach((dataInAsList,index) => {  
       const { as_id, service_id, as_fee_ratio } = dataInAsList;
-      as_full_price = scopedPriceList['as'][as_id][service_id];
+      as_full_price = getAsFullPrice(scopedPriceList['as'], as_id, service_id);
       as_price = as_full_price * as_fee_ratio;
       result[rootName].settlement.asList[index] = { ...dataInAsList, as_price, as_full_price }
     });
