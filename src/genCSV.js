@@ -109,10 +109,12 @@ const fieldsRpIdp = [
     value: 'valid_idp_response_ial',
   }, {
     label: 'IdP Price',
-    value: 'price',
+    value: row => row.price.toFixed(2),
+    stringify: false,
   }, {
     label: 'IdP Full Price',
-    value: 'full_price',
+    value: row => row.full_price.toFixed(2),
+    stringify: false,
   },
 ];
 const fieldsRpIdpSummary = [
@@ -130,7 +132,8 @@ const fieldsRpIdpSummary = [
     value: 'idpName',
   }, {
     label: 'IdP Price',
-    value: 'idpPrice',
+    value: row => row.idpPrice.toFixed(2),
+    stringify: false,
   },
 ];
 
@@ -176,10 +179,12 @@ const fieldsRpAs = [
     value: 'data_received',
   }, {
     label: 'AS Price',
-    value: 'price',
+    value: row => row.price.toFixed(2),
+    stringify: false,
   }, {
     label: 'AS Full Price',
-    value: 'full_price',
+    value: row => row.full_price.toFixed(2),
+    stringify: false,
   },
 ];
 const fieldsRpAsSummary = [
@@ -200,7 +205,8 @@ const fieldsRpAsSummary = [
     value: 'serviceId',
   }, {
     label: 'AS Price',
-    value: 'asPrice',
+    value: row => row.asPrice.toFixed(2),
+    stringify: false,
   },
 ];
 
@@ -231,7 +237,8 @@ const fieldsRpNdid = [
     value: 'mode',
   }, {
     label: 'NDID Price',
-    value: 'price',
+    value: row => row.price.toFixed(2),
+    stringify: false,
   },
 ];
 const fieldsRpNdidSummary = [
@@ -243,7 +250,8 @@ const fieldsRpNdidSummary = [
     value: 'rpName',
   }, {
     label: 'NDID Price',
-    value: 'ndidPrice',
+    value: row => row.ndidPrice.toFixed(2),
+    stringify: false,
   },
 ];
 
@@ -327,8 +335,8 @@ function genRowsFromRequest(req, nodeInfo) {
       request.valid_idp_response_ial = item.valid_ial === true ? 'Yes' : 'No';
     }
 
-    request.price = _.round(item.idp_price, 6);
-    request.full_price = _.round(item.idp_full_price, 6);
+    request.price = _.round(item.idp_price, 2);
+    request.full_price = _.round(item.idp_full_price, 2);
 
     rpIdp.push(request);
   });
@@ -349,8 +357,8 @@ function genRowsFromRequest(req, nodeInfo) {
     request.service_id = item.service_id;
     request.data_answered = item.data_answered ? 'Yes' : 'No';
     request.data_received = item.data_received ? 'Yes' : 'No';
-    request.price = _.round(item.as_price, 6);
-    request.full_price = _.round(item.as_full_price, 6);
+    request.price = _.round(item.as_price, 2);
+    request.full_price = _.round(item.as_full_price, 2);
 
     rpAs.push(request);
   });
@@ -419,7 +427,7 @@ function genSummaryRpIdp(path, requests, nodeIdList, nodeInfo, outputDirPath) {
     }), {
       idpPrice: 0,
     });
-    sum.idpPrice = _.round(sum.idpPrice, 6);
+    sum.idpPrice = _.round(sum.idpPrice, 2);
     summary.push(sum);
   });
   const sumCsv = rpIdpSumParser.parse(summary);
@@ -445,7 +453,7 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, output
     }), {
       asPrice: 0,
     });
-    sumRpAs.asPrice = _.round(sumRpAs.asPrice, 6);
+    sumRpAs.asPrice = _.round(sumRpAs.asPrice, 2);
     summary.push(sumRpAs);
   });
   const sumCsv = rpAsSumParser.parse(summary);
@@ -463,7 +471,7 @@ function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
       }), {
         ndidPrice: 0,
       }),
-  ].map(item => ({ ...item, ndidPrice: _.round(item.ndidPrice, 6) }));
+  ].map(item => ({ ...item, ndidPrice: _.round(item.ndidPrice, 2) }));
 
   const sumCsv = rpNdidSumParser.parse(summary);
   createFile(sumCsv, path, outputDirPath);
