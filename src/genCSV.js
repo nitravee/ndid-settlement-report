@@ -414,11 +414,12 @@ function createFile(csv, filePathInOutputDir, outputDirPath) {
   });
 }
 
-function genSummaryRpIdp(path, requests, nodeIdList, nodeInfo, outputDirPath) {
+function genSummaryRpIdp(path, requests, nodeIdList, checkRp, nodeInfo, outputDirPath) {
   const summary = [];
   nodeIdList.forEach((id) => {
-    const filter = requests.filter(item => item.idp_id === id);
-    const sum = filter.reduce((prev, curr) => ({
+    const filteredReqs = requests.filter(item =>
+      (checkRp ? item.rp_id === id : item.idp_id === id));
+    const sum = filteredReqs.reduce((prev, curr) => ({
       rpId: curr.rp_id,
       rpName: getNodeName(nodeInfo[curr.rp_id]),
       idpId: curr.idp_id,
@@ -437,13 +438,13 @@ function genSummaryRpIdp(path, requests, nodeIdList, nodeInfo, outputDirPath) {
 function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, outputDirPath) {
   const summary = [];
   checkDataList.forEach((checkData) => {
-    const filter = requests.filter((item) => {
+    const filteredReqs = requests.filter((item) => {
       if (checkRp) {
         return checkData.rpId === item.rp_id && checkData.serviceId === item.service_id;
       }
       return checkData.asId === item.as_id && checkData.serviceId === item.service_id;
     });
-    const sumRpAs = filter.reduce((prev, curr) => ({
+    const sumRpAs = filteredReqs.reduce((prev, curr) => ({
       rpId: curr.rp_id,
       rpName: getNodeName(nodeInfo[curr.rp_id]),
       asId: curr.as_id,
@@ -508,15 +509,16 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
     createFile(csv, `csv/rp-idp/${id}.csv`, outputDirPath);
 
-    const idp = [];
+    const idpList = [];
     rpIdp.forEach((item) => {
-      if (!idp.includes(item.idp_id)) {
-        idp.push(item.idp_id);
+      if (!idpList.includes(item.idp_id)) {
+        idpList.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idp, nodeInfo, outputDirPath);
+    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idpList, false, nodeInfo, outputDirPath);
 
-    const rpNdidCsv = rpNdidParser.parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
+    const rpNdidCsv = rpNdidParser
+      .parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
     createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
 
     genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
@@ -532,13 +534,13 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
     createFile(csv, `csv/idp-rp/${id}.csv`, outputDirPath);
 
-    const rp = [];
+    const rpList = [];
     idpRp.forEach((item) => {
-      if (!rp.includes(item.idp_id)) {
-        rp.push(item.idp_id);
+      if (!rpList.includes(item.rp_id)) {
+        rpList.push(item.rp_id);
       }
     });
-    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rp, nodeInfo, outputDirPath);
+    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
   });
 
   nodeList.rpList.forEach((id) => {
