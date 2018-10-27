@@ -69,6 +69,30 @@ const fieldsRpIdp = [
     value: 'rp_name',
   },
   {
+    label: 'RP Node Industry Code',
+    value: row => row.rp_name_obj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rp_name_obj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rp_name_obj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rp_name_obj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_en,
+  },
+  {
     label: 'Request ID',
     value: 'request_id',
   }, {
@@ -92,6 +116,29 @@ const fieldsRpIdp = [
   }, {
     label: 'IdP Node Name',
     value: 'idp_name',
+  }, {
+    label: 'IdP Node Industry Code',
+    value: row => row.idp_name_obj.industry_code,
+  },
+  {
+    label: 'IdP Node Company Code',
+    value: row => row.idp_name_obj.company_code,
+  },
+  {
+    label: 'IdP Node Marketing Name TH',
+    value: row => row.idp_name_obj.marketing_name_th,
+  },
+  {
+    label: 'IdP Node Marketing Name EN',
+    value: row => row.idp_name_obj.marketing_name_en,
+  },
+  {
+    label: 'IdP Node Proxy or Subsidiary Name TH',
+    value: row => row.idp_name_obj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'IdP Node Proxy or Subsidiary Name EN',
+    value: row => row.idp_name_obj.proxy_or_subsidiary_name_en,
   }, {
     label: 'Requested IAL',
     value: 'ial',
@@ -125,11 +172,57 @@ const fieldsRpIdpSummary = [
     label: 'RP Node Name',
     value: 'rpName',
   }, {
+    label: 'RP Node Industry Code',
+    value: row => row.rpNameObj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rpNameObj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rpNameObj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rpNameObj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_en,
+  }, {
     label: 'IdP Node ID',
     value: 'idpId',
   }, {
     label: 'IdP Node Name',
     value: 'idpName',
+  }, {
+    label: 'IdP Node Industry Code',
+    value: row => row.idpNameObj.industry_code,
+  },
+  {
+    label: 'IdP Node Company Code',
+    value: row => row.idpNameObj.company_code,
+  },
+  {
+    label: 'IdP Node Marketing Name TH',
+    value: row => row.idpNameObj.marketing_name_th,
+  },
+  {
+    label: 'IdP Node Marketing Name EN',
+    value: row => row.idpNameObj.marketing_name_en,
+  },
+  {
+    label: 'IdP Node Proxy or Subsidiary Name TH',
+    value: row => row.idpNameObj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'IdP Node Proxy or Subsidiary Name EN',
+    value: row => row.idpNameObj.proxy_or_subsidiary_name_en,
   }, {
     label: 'IdP Price',
     value: row => row.idpPrice.toFixed(2),
@@ -144,6 +237,29 @@ const fieldsRpAs = [
   }, {
     label: 'RP Node Name',
     value: 'rp_name',
+  }, {
+    label: 'RP Node Industry Code',
+    value: row => row.rp_name_obj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rp_name_obj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rp_name_obj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rp_name_obj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_en,
   }, {
     label: 'Request ID',
     value: 'request_id',
@@ -168,6 +284,29 @@ const fieldsRpAs = [
   }, {
     label: 'AS Node Name',
     value: 'as_name',
+  }, {
+    label: 'AS Node Industry Code',
+    value: row => row.as_name_obj.industry_code,
+  },
+  {
+    label: 'AS Node Company Code',
+    value: row => row.as_name_obj.company_code,
+  },
+  {
+    label: 'AS Node Marketing Name TH',
+    value: row => row.as_name_obj.marketing_name_th,
+  },
+  {
+    label: 'AS Node Marketing Name EN',
+    value: row => row.as_name_obj.marketing_name_en,
+  },
+  {
+    label: 'AS Node Proxy or Subsidiary Name TH',
+    value: row => row.as_name_obj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'AS Node Proxy or Subsidiary Name EN',
+    value: row => row.as_name_obj.proxy_or_subsidiary_name_en,
   }, {
     label: 'AS Service ID',
     value: 'service_id',
@@ -195,11 +334,57 @@ const fieldsRpAsSummary = [
     label: 'RP Node Name',
     value: 'rpName',
   }, {
+    label: 'RP Node Industry Code',
+    value: row => row.rpNameObj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rpNameObj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rpNameObj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rpNameObj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_en,
+  }, {
     label: 'AS Node ID',
     value: 'asId',
   }, {
     label: 'AS Node Name',
     value: 'asName',
+  }, {
+    label: 'AS Node Industry Code',
+    value: row => row.asNameObj.industry_code,
+  },
+  {
+    label: 'AS Node Company Code',
+    value: row => row.asNameObj.company_code,
+  },
+  {
+    label: 'AS Node Marketing Name TH',
+    value: row => row.asNameObj.marketing_name_th,
+  },
+  {
+    label: 'AS Node Marketing Name EN',
+    value: row => row.asNameObj.marketing_name_en,
+  },
+  {
+    label: 'AS Node Proxy or Subsidiary Name TH',
+    value: row => row.asNameObj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'AS Node Proxy or Subsidiary Name EN',
+    value: row => row.asNameObj.proxy_or_subsidiary_name_en,
   }, {
     label: 'AS Service ID',
     value: 'serviceId',
@@ -217,6 +402,29 @@ const fieldsRpNdid = [
   }, {
     label: 'RP Node Name',
     value: 'rp_name',
+  }, {
+    label: 'RP Node Industry Code',
+    value: row => row.rp_name_obj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rp_name_obj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rp_name_obj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rp_name_obj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rp_name_obj.proxy_or_subsidiary_name_en,
   }, {
     label: 'Request ID',
     value: 'request_id',
@@ -249,6 +457,29 @@ const fieldsRpNdidSummary = [
     label: 'RP Node Name',
     value: 'rpName',
   }, {
+    label: 'RP Node Industry Code',
+    value: row => row.rpNameObj.industry_code,
+  },
+  {
+    label: 'RP Node Company Code',
+    value: row => row.rpNameObj.company_code,
+  },
+  {
+    label: 'RP Node Marketing Name TH',
+    value: row => row.rpNameObj.marketing_name_th,
+  },
+  {
+    label: 'RP Node Marketing Name EN',
+    value: row => row.rpNameObj.marketing_name_en,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name TH',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_th,
+  },
+  {
+    label: 'RP Node Proxy or Subsidiary Name EN',
+    value: row => row.rpNameObj.proxy_or_subsidiary_name_en,
+  }, {
     label: 'NDID Price',
     value: row => row.ndidPrice.toFixed(2),
     stringify: false,
@@ -272,6 +503,10 @@ function heightCompare(rowA, rowB) {
 
 function getNodeName(aNodeInfo = {}) {
   return aNodeInfo.node_name;
+}
+
+function getNodeNameObj(aNodeInfo = {}) {
+  return aNodeInfo.node_name_obj || {};
 }
 
 function getNodeNames(nodeInfo, nodeIds) {
@@ -311,6 +546,7 @@ function genRowsFromRequest(req, nodeInfo) {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
+    request.rp_name_obj = getNodeNameObj(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.closed = settlement.closed ? 'Yes' : 'No';
@@ -319,6 +555,7 @@ function genRowsFromRequest(req, nodeInfo) {
     request.mode = settlement.mode;
     request.idp_id = item.idp_id;
     request.idp_name = getNodeName(nodeInfo[item.idp_id]);
+    request.idp_name_obj = getNodeNameObj(nodeInfo[item.idp_id]);
     request.ial = item.ial;
     request.aal = item.aal;
     request.response = item.status;
@@ -346,6 +583,7 @@ function genRowsFromRequest(req, nodeInfo) {
     const request = {};
     request.rp_id = settlement.requester_node_id;
     request.rp_name = getNodeName(nodeInfo[settlement.requester_node_id]);
+    request.rp_name_obj = getNodeNameObj(nodeInfo[settlement.requester_node_id]);
     request.request_id = settlement.request_id;
     request.status = settlement.status;
     request.closed = settlement.closed ? 'Yes' : 'No';
@@ -354,6 +592,7 @@ function genRowsFromRequest(req, nodeInfo) {
     request.mode = settlement.mode;
     request.as_id = item.as_id;
     request.as_name = getNodeName(nodeInfo[item.as_id]);
+    request.as_name_obj = getNodeNameObj(nodeInfo[item.as_id]);
     request.service_id = item.service_id;
     request.data_answered = item.data_answered ? 'Yes' : 'No';
     request.data_received = item.data_received ? 'Yes' : 'No';
@@ -366,6 +605,7 @@ function genRowsFromRequest(req, nodeInfo) {
   const rpNdid = [{
     rp_id: settlement.requester_node_id,
     rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
+    rp_name_obj: getNodeNameObj(nodeInfo[settlement.requester_node_id]),
     request_id: settlement.request_id,
     status: settlement.status,
     closed: settlement.closed ? 'Yes' : 'No',
@@ -382,21 +622,45 @@ function genRowsFromRequest(req, nodeInfo) {
   };
 }
 
+function getOrgInfo(nodeNameObj) {
+  if (!nodeNameObj) {
+    return;
+  }
+
+  return {
+    industryCode: nodeNameObj.industry_code,
+    companyCode: nodeNameObj.company_code,
+    marketingNameTh: nodeNameObj.marketing_name_th,
+    marketingNameEn: nodeNameObj.marketing_name_en,
+    proxyOrSubsidiaryNameTh: nodeNameObj.proxy_or_subsidiary_name_th,
+    proxyOrSubsidiaryNameEn: nodeNameObj.proxy_or_subsidiary_name_en,
+  }
+}
+
 function getNodeList(allRows) {
   const rpList = [];
   const idpList = [];
   const asList = [];
   allRows.rpIdp.forEach((item) => {
-    if (!rpList.includes(item.rp_id)) {
-      rpList.push(item.rp_id);
+    if (!rpList.find(node => node.nodeId === item.rp_id)) {
+      rpList.push({
+        id: item.rp_id,
+        org: getOrgInfo(item.rp_name_obj),
+      });
     }
-    if (!idpList.includes(item.idp_id)) {
-      idpList.push(item.idp_id);
+    if (!idpList.find(node => node.nodeId === item.idp_id)) {
+      idpList.push({
+        id: item.idp_id,
+        org: getOrgInfo(item.rp_name_obj),
+      });
     }
   });
   allRows.rpAs.forEach((item) => {
-    if (!asList.includes(item.as_id)) {
-      asList.push(item.as_id);
+    if (!asList.find(node => node.nodeId === item.as_id)) {
+      asList.push({
+        id: item.as_id,
+        org: getOrgInfo(item.rp_name_obj),
+      });
     }
   });
   return {
@@ -422,8 +686,10 @@ function genSummaryRpIdp(path, requests, nodeIdList, checkRp, nodeInfo, outputDi
     const sum = filteredReqs.reduce((prev, curr) => ({
       rpId: curr.rp_id,
       rpName: getNodeName(nodeInfo[curr.rp_id]),
+      rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
       idpId: curr.idp_id,
       idpName: getNodeName(nodeInfo[curr.idp_id]),
+      idpNameObj: getNodeNameObj(nodeInfo[curr.idp_id]),
       idpPrice: prev.idpPrice + curr.price,
     }), {
       idpPrice: 0,
@@ -447,8 +713,10 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, output
     const sumRpAs = filteredReqs.reduce((prev, curr) => ({
       rpId: curr.rp_id,
       rpName: getNodeName(nodeInfo[curr.rp_id]),
+      rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
       asId: curr.as_id,
       asName: getNodeName(nodeInfo[curr.as_id]),
+      asNameObj: getNodeNameObj(nodeInfo[curr.as_id]),
       serviceId: curr.service_id,
       asPrice: prev.asPrice + curr.price,
     }), {
@@ -468,6 +736,7 @@ function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
       .reduce((prev, curr) => ({
         rpId: curr.rp_id,
         rpName: getNodeName(nodeInfo[curr.rp_id]),
+        rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
         ndidPrice: prev.ndidPrice + curr.price,
       }), {
         ndidPrice: 0,
@@ -499,7 +768,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     });
   const nodeList = getNodeList(allRows);
 
-  nodeList.rpList.forEach((id) => {
+  nodeList.rpList.forEach(({ id }) => {
     const rpIdp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.rp_id) {
@@ -524,7 +793,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
   });
 
-  nodeList.idpList.forEach((id) => {
+  nodeList.idpList.forEach(({ id }) => {
     const idpRp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.idp_id) {
@@ -543,7 +812,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
   });
 
-  nodeList.rpList.forEach((id) => {
+  nodeList.rpList.forEach(({ id }) => {
     const rpAs = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.rp_id) {
@@ -566,7 +835,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
     genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputDirPath);
   });
 
-  nodeList.asList.forEach((id) => {
+  nodeList.asList.forEach(({ id }) => {
     const asRp = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.as_id) {
