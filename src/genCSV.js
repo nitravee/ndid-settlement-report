@@ -818,6 +818,9 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
           .map(row => row.as_name_obj.marketing_name_en)))
       .filter(mktName => mktName); // Filter null out for now, TODO:
 
+    // #################################
+    // RP Summary by Org
+    // #################################
     const idpRow = rpIdpRows
       .reduce((prev, curr) => {
         // Filter null out for now, TODO:
@@ -871,9 +874,45 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, outputDirPath) {
           stringify: false,
         })));
 
-    const rpSumParser = new Json2csvParser({ fields: fieldsRpSummaryByOrg });
-    const csv = rpSumParser.parse([idpRow, asRow, totalRow]);
+    const rpSumByOrgParser = new Json2csvParser({ fields: fieldsRpSummaryByOrg });
+    const csv = rpSumByOrgParser.parse([idpRow, asRow, totalRow]);
     createFile(csv, `csv/rp-summary-by-org/${orgMktName}.csv`, outputDirPath);
+
+    // #################################
+    // RP-AS Summary by Org
+    // #################################
+    const rpAsSumByOrg = rpAsRows
+      .reduce((prev, curr) => {
+        // Filter null out for now, TODO:
+        if (!curr.as_name_obj.marketing_name_en) {
+          return prev;
+        }
+
+        const result = Object.assign({}, prev);
+        if (!result[curr.as_name_obj.marketing_name_en]) {
+          result[curr.as_name_obj.marketing_name_en] = { org: curr.as_name_obj.marketing_name_en };
+        }
+
+        result[curr.as_name_obj.marketing_name_en][curr.service_id] =
+          (result[curr.as_name_obj.marketing_name_en][curr.service_id] || 0) + curr.price;
+        return result;
+      }, {});
+    const rpAsSumByOrgRows = Object.values(rpAsSumByOrg);
+    const fieldsRpAsSummaryByOrg = [{
+      label: 'Organization',
+      value: 'org',
+    }]
+      .concat(_
+        .uniq(_.flatten(rpAsSumByOrgRows.map(row => Object.keys(row))).filter(key => key !== 'org'))
+        .map(serviceId => ({
+          label: serviceId,
+          value: row => _.round(row[serviceId] || 0, 2).toFixed(2),
+          default: '0.00',
+          stringify: false,
+        })));
+
+    const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
+    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${orgMktName}.csv`, outputDirPath);
   });
 
   nodeList.idpList.forEach(({ id }) => {
