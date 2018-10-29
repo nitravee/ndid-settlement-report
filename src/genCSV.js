@@ -879,44 +879,6 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     createFile(csv, `csv/rp-summary-by-org/${rpMktName}.csv`, outputDirPath);
 
     // #################################
-    // RP-AS Summary by Org
-    // #################################
-    const rpAsSumByOrg = rpAsRows
-      .reduce((prev, curr) => {
-        const asMktName = curr.as_name_obj.marketing_name_en;
-
-        // Filter null out for now, TODO:
-        if (!asMktName) {
-          return prev;
-        }
-
-        const result = Object.assign({}, prev);
-        if (!result[asMktName]) {
-          result[asMktName] = { org: asMktName };
-        }
-
-        result[asMktName][curr.service_id] =
-          (result[asMktName][curr.service_id] || 0) + curr.price;
-        return result;
-      }, {});
-    const rpAsSumByOrgRows = Object.values(rpAsSumByOrg);
-    const fieldsRpAsSummaryByOrg = [{
-      label: 'Organization',
-      value: 'org',
-    }]
-      .concat(allPriceCategories
-        .as
-        .map(serviceId => ({
-          label: serviceId,
-          value: row => _.round(row[serviceId] || 0, 2).toFixed(2),
-          default: '0.00',
-          stringify: false,
-        })));
-
-    const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
-    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
-
-    // #################################
     // RP-IdP Summary by Org
     // #################################
     const rpIdpSumByOrg = rpIdpRows
@@ -955,6 +917,44 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const rpIdpSumByOrgParser = new Json2csvParser({ fields: fieldsRpIdpSummaryByOrg });
     createFile(rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows), `csv/rp-idp-summary-by-org/${rpMktName}.csv`, outputDirPath);
+
+    // #################################
+    // RP-AS Summary by Org
+    // #################################
+    const rpAsSumByOrg = rpAsRows
+      .reduce((prev, curr) => {
+        const asMktName = curr.as_name_obj.marketing_name_en;
+
+        // Filter null out for now, TODO:
+        if (!asMktName) {
+          return prev;
+        }
+
+        const result = Object.assign({}, prev);
+        if (!result[asMktName]) {
+          result[asMktName] = { org: asMktName };
+        }
+
+        result[asMktName][curr.service_id] =
+          (result[asMktName][curr.service_id] || 0) + curr.price;
+        return result;
+      }, {});
+    const rpAsSumByOrgRows = Object.values(rpAsSumByOrg);
+    const fieldsRpAsSummaryByOrg = [{
+      label: 'Organization',
+      value: 'org',
+    }]
+      .concat(allPriceCategories
+        .as
+        .map(serviceId => ({
+          label: serviceId,
+          value: row => _.round(row[serviceId] || 0, 2).toFixed(2),
+          default: '0.00',
+          stringify: false,
+        })));
+
+    const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
+    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
   });
 
   nodeList.idpList.forEach(({ id }) => {
@@ -976,6 +976,9 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
   });
 
+  // #################################
+  // IdP-RP Summary by Org
+  // #################################
   orgList.idpList.forEach((idpMktName) => {
     const idpRpRows = allRows.rpIdp.filter(row =>
       row.idp_name_obj.marketing_name_en === idpMktName);
@@ -1061,6 +1064,48 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       }
     });
     genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputDirPath);
+  });
+
+  // #################################
+  // AS-RP Summary by Org
+  // #################################
+  orgList.asList.forEach((asMktName) => {
+    const asRpRows = allRows.rpAs.filter(row =>
+      row.as_name_obj.marketing_name_en === asMktName);
+    const asRpSumByOrg = asRpRows
+      .reduce((prev, curr) => {
+        const rpMktName = curr.as_name_obj.marketing_name_en;
+
+        // Filter null out for now, TODO:
+        if (!rpMktName) {
+          return prev;
+        }
+
+        const result = Object.assign({}, prev);
+        if (!result[rpMktName]) {
+          result[rpMktName] = { org: rpMktName };
+        }
+
+        result[rpMktName][curr.service_id] =
+          (result[rpMktName][curr.service_id] || 0) + curr.price;
+        return result;
+      }, {});
+    const asRpSumByOrgRows = Object.values(asRpSumByOrg);
+    const fieldsAsRpSummaryByOrg = [{
+      label: 'Organization',
+      value: 'org',
+    }]
+      .concat(allPriceCategories
+        .as
+        .map(serviceId => ({
+          label: serviceId,
+          value: row => _.round(row[serviceId] || 0, 2).toFixed(2),
+          default: '0.00',
+          stringify: false,
+        })));
+
+    const asRpSumByOrgParser = new Json2csvParser({ fields: fieldsAsRpSummaryByOrg });
+    createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `csv/as-rp-summary-by-org/${asMktName}.csv`, outputDirPath);
   });
 }
 
