@@ -488,6 +488,19 @@ const fieldsRpNdidSummary = [
     stringify: false,
   },
 ];
+const fieldsRpNdidSummaryByOrg = [
+  {
+    label: 'Organization',
+    value: 'org',
+  }, {
+    label: 'Number of Transactions',
+    value: 'numberOfTxns',
+  }, {
+    label: 'NDID Price',
+    value: row => row.ndidPrice.toFixed(2),
+    stringify: false,
+  },
+];
 
 const pendingParser = new Json2csvParser({ fields: fieldsPending });
 
@@ -499,6 +512,7 @@ const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 
 const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
+const rpNdidSumByOrgParser = new Json2csvParser({ fields: fieldsRpNdidSummaryByOrg });
 
 function heightCompare(rowA, rowB) {
   return rowA.height - rowB.height;
@@ -958,6 +972,18 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
     createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
+
+    // #################################
+    // RP-NDID Summary by Org
+    // #################################
+    const rpNdidRows = allRows.rpNdid.filter(row =>
+      row.rp_name_obj.marketing_name_en === rpMktName);
+    const rpNdidSumByOrg = [{
+      org: rpMktName,
+      numberOfTxns: rpNdidRows.length,
+      ndidPrice: _.sum(rpNdidRows.map(row => row.price)),
+    }];
+    createFile(rpNdidSumByOrgParser.parse(rpNdidSumByOrg), `csv/rp-ndid-summary-by-org/${rpMktName}.csv`, outputDirPath);
   });
 
   nodeList.idpList.forEach(({ id }) => {
