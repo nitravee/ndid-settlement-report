@@ -904,8 +904,8 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       label: 'Organization',
       value: 'org',
     }]
-      .concat(_
-        .uniq(_.flatten(rpAsSumByOrgRows.map(row => Object.keys(row))).filter(key => key !== 'org'))
+      .concat(allPriceCategories
+        .as
         .map(serviceId => ({
           label: serviceId,
           value: row => _.round(row[serviceId] || 0, 2).toFixed(2),
