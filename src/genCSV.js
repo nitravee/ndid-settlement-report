@@ -480,6 +480,9 @@ const fieldsRpNdidSummary = [
     label: 'RP Node Proxy or Subsidiary Name EN',
     value: row => row.rpNameObj.proxy_or_subsidiary_name_en,
   }, {
+    label: 'Number of Transactions',
+    value: 'numberOfTxns',
+  }, {
     label: 'NDID Price',
     value: row => row.ndidPrice.toFixed(2),
     stringify: false,
@@ -742,20 +745,20 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, output
 }
 
 function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
-  const summary = [
-    requests
-      .filter(req => req.rp_id === rpId)
-      .reduce((prev, curr) => ({
-        rpId: curr.rp_id,
-        rpName: getNodeName(nodeInfo[curr.rp_id]),
-        rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
-        ndidPrice: prev.ndidPrice + curr.price,
-      }), {
-        ndidPrice: 0,
-      }),
-  ].map(item => ({ ...item, ndidPrice: _.round(item.ndidPrice, 2) }));
+  const rpReqs = requests.filter(req => req.rp_id === rpId);
+  const row = rpReqs
+    .reduce((prev, curr) => ({
+      rpId: curr.rp_id,
+      rpName: getNodeName(nodeInfo[curr.rp_id]),
+      rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
+      ndidPrice: prev.ndidPrice + curr.price,
+    }), {
+      ndidPrice: 0,
+    });
+  row.ndidPrice = _.round(row.ndidPrice, 2);
+  row.numberOfTxns = rpReqs.length;
 
-  const sumCsv = rpNdidSumParser.parse(summary);
+  const sumCsv = rpNdidSumParser.parse([row]);
   createFile(sumCsv, path, outputDirPath);
 }
 
