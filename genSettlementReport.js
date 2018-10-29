@@ -4,7 +4,7 @@ const fs = require('fs');
 const mkpath = require('mkpath');
 const { importNodeInfo } = require('./src/importNodeInfo');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
-const { importPriceListDirectories } = require('./src/importPriceList');
+const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
 const { categorizeRequests } = require('./src/categorizeRequests');
 const { createSummaryReport } = require('./src/createSummaryReport');
@@ -68,11 +68,17 @@ if (enableDebugFile) {
 
 importPriceListDirectories(pricesDirPath)
   .then((priceList) => {
+    const priceCategories = getPriceCategories(priceList);
     console.log('\nImporting price list succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceList.json', err);
+        }
+      });
+      fs.writeFile(path.resolve(debugFileDirPath, './priceCategories.json'), JSON.stringify(priceCategories, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: priceCategories.json', err);
         }
       });
     }
@@ -136,7 +142,7 @@ importPriceListDirectories(pricesDirPath)
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
 
 
-    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, outputPath);
+    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, priceCategories, outputPath);
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
 
     console.log('\nGenerating settlement reports succeeded.');

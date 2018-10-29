@@ -1,6 +1,7 @@
 const csv = require('csvtojson');
 const fs = require('fs');
 const { join } = require('path');
+const _ = require('lodash');
 
 const isDirectory = source => fs.lstatSync(source).isDirectory();
 const getDirectories = source =>
@@ -112,7 +113,54 @@ async function importPriceListDirectories(rootDirPath) {
   return result;
 }
 
+function getPriceCategories(priceList) {
+  const priceCatsObj = priceList
+    .map((priceInfo) => {
+      const { prices: { idp, as } } = priceInfo;
+      const sampleIdpPrice = Object.values(idp)[0];
+      const idpPriceCats = Object.keys(sampleIdpPrice).reduce(
+        (catList, aal) =>
+          catList.concat(Object.keys(sampleIdpPrice[aal]).map(ial => ({ ial, aal }))),
+        [],
+      );
+      const sampleAsPrice = Object.values(as)[0];
+      const asPriceCats = Object.keys(sampleAsPrice);
+
+      return {
+        idp: idpPriceCats,
+        as: asPriceCats,
+      };
+    })
+    .reduce(
+      (prev, curr) => ({
+        idp: _.uniqWith(prev.idp.concat(curr.idp), _.isEqual),
+        as: _.uniq(prev.as.concat(curr.as)),
+      }),
+      { idp: [], as: [] },
+    );
+
+  priceCatsObj.idp = priceCatsObj
+    .idp
+    .sort((a, b) => {
+      const aIal = parseFloat(a.ial);
+      const bIal = parseFloat(b.ial);
+      if (aIal < bIal) {
+        return -1;
+      }
+      if (aIal > bIal) {
+        return 1;
+      }
+
+      const aAal = parseFloat(a.aal);
+      const bAal = parseFloat(b.aal);
+      return aAal - bAal;
+    });
+
+  return priceCatsObj;
+}
+
 module.exports = {
   importPriceList,
   importPriceListDirectories,
+  getPriceCategories,
 };
