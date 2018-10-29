@@ -501,6 +501,32 @@ const fieldsRpNdidSummaryByOrg = [
     stringify: false,
   },
 ];
+const fieldsSummaryByOrg = [
+  {
+    label: 'Organization',
+    value: 'org',
+  }, {
+    label: 'RP',
+    value: row => `(${row.rp.toFixed(2)})`,
+    stringify: false,
+  }, {
+    label: 'IdP',
+    value: row => row.idp.toFixed(2),
+    stringify: false,
+  }, {
+    label: 'AS',
+    value: row => row.as.toFixed(2),
+    stringify: false,
+  }, {
+    label: 'NDID',
+    value: row => `(${row.ndid.toFixed(2)})`,
+    stringify: false,
+  }, {
+    label: 'Total',
+    value: row => (row.total < 0 ? `(${(Math.abs(row.total)).toFixed(2)})` : row.total.toFixed(2)),
+    stringify: false,
+  },
+];
 
 const pendingParser = new Json2csvParser({ fields: fieldsPending });
 
@@ -513,6 +539,8 @@ const rpAsSumParser = new Json2csvParser({ fields: fieldsRpAsSummary });
 const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 const rpNdidSumByOrgParser = new Json2csvParser({ fields: fieldsRpNdidSummaryByOrg });
+
+const sumByOrgParser = new Json2csvParser({ fields: fieldsSummaryByOrg });
 
 function heightCompare(rowA, rowB) {
   return rowA.height - rowB.height;
@@ -1136,6 +1164,37 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     const asRpSumByOrgParser = new Json2csvParser({ fields: fieldsAsRpSummaryByOrg });
     createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `csv/as-rp-summary-by-org/${asMktName}.csv`, outputDirPath);
   });
+
+  // #################################
+  // Summary by Org
+  // #################################
+  _
+    .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
+    .forEach((mktName) => {
+      const rpRows = [
+        ...allRows.rpIdp.filter(row =>
+          row.rp_name_obj.marketing_name_en === mktName),
+        ...allRows.rpAs.filter(row =>
+          row.rp_name_obj.marketing_name_en === mktName),
+      ];
+      const idpRows = allRows.rpIdp.filter(row =>
+        row.idp_name_obj.marketing_name_en === mktName);
+      const asRows = allRows.rpAs.filter(row =>
+        row.as_name_obj.marketing_name_en === mktName);
+      const ndidRows = allRows.rpNdid.filter(row =>
+        row.rp_name_obj.marketing_name_en === mktName);
+
+      const summary = {
+        org: mktName,
+        rp: _.round(_.sum(rpRows.map(row => row.price)), 2),
+        idp: _.round(_.sum(idpRows.map(row => row.price)), 2),
+        as: _.round(_.sum(asRows.map(row => row.price)), 2),
+        ndid: _.round(_.sum(ndidRows.map(row => row.price)), 2),
+      };
+      summary.total = _.round(summary.idp + summary.as - summary.rp - summary.ndid, 2);
+
+      createFile(sumByOrgParser.parse([summary]), `csv/summary-by-org/${mktName}.csv`, outputDirPath);
+    });
 }
 
 module.exports.genCSV = genCSV;
