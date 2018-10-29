@@ -1129,7 +1129,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       row.as_name_obj.marketing_name_en === asMktName);
     const asRpSumByOrg = asRpRows
       .reduce((prev, curr) => {
-        const rpMktName = curr.as_name_obj.marketing_name_en;
+        const rpMktName = curr.rp_name_obj.marketing_name_en;
 
         // Filter null out for now, TODO:
         if (!rpMktName) {
