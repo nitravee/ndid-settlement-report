@@ -7,6 +7,7 @@ const _ = require('lodash');
 const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
+const { financialNumberFormat } = require('./utils/csvUtil');
 
 const NDID_PRICE_PER_REQ = 5;
 
@@ -503,11 +504,8 @@ const fieldsRpNdidSummaryByOrg = [
 ];
 const fieldsSummaryByOrg = [
   {
-    label: 'Organization',
-    value: 'org',
-  }, {
     label: 'RP',
-    value: row => `(${row.rp.toFixed(2)})`,
+    value: row => financialNumberFormat(row.rp),
     stringify: false,
   }, {
     label: 'IdP',
@@ -519,11 +517,11 @@ const fieldsSummaryByOrg = [
     stringify: false,
   }, {
     label: 'NDID',
-    value: row => `(${row.ndid.toFixed(2)})`,
+    value: row => financialNumberFormat(row.ndid),
     stringify: false,
   }, {
     label: 'Total',
-    value: row => (row.total < 0 ? `(${(Math.abs(row.total)).toFixed(2)})` : row.total.toFixed(2)),
+    value: row => financialNumberFormat(row.total),
     stringify: false,
   },
 ];
@@ -1185,13 +1183,12 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
         row.rp_name_obj.marketing_name_en === mktName);
 
       const summary = {
-        org: mktName,
-        rp: _.round(_.sum(rpRows.map(row => row.price)), 2),
+        rp: _.round(_.sum(rpRows.map(row => row.price)) * -1, 2),
         idp: _.round(_.sum(idpRows.map(row => row.price)), 2),
         as: _.round(_.sum(asRows.map(row => row.price)), 2),
-        ndid: _.round(_.sum(ndidRows.map(row => row.price)), 2),
+        ndid: _.round(_.sum(ndidRows.map(row => row.price)) * -1, 2),
       };
-      summary.total = _.round(summary.idp + summary.as - summary.rp - summary.ndid, 2);
+      summary.total = _.round(summary.idp + summary.as + summary.rp + summary.ndid, 2);
 
       createFile(sumByOrgParser.parse([summary]), `csv/summary-by-org/${mktName}.csv`, outputDirPath);
     });
