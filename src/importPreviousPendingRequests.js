@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 function importPreviousPendingRequests(filePath) {
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(filePath) || !fs.lstatSync(filePath).isFile()) {
     return {};
   }
 
