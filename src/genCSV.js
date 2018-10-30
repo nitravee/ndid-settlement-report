@@ -697,13 +697,13 @@ function getNodeList(allRows) {
   const idpList = [];
   const asList = [];
   allRows.rpIdp.forEach((item) => {
-    if (!rpList.find(node => node.nodeId === item.rp_id)) {
+    if (!rpList.find(node => node.id === item.rp_id)) {
       rpList.push({
         id: item.rp_id,
         org: getOrgInfo(item.rp_name_obj),
       });
     }
-    if (!idpList.find(node => node.nodeId === item.idp_id)) {
+    if (!idpList.find(node => node.id === item.idp_id)) {
       idpList.push({
         id: item.idp_id,
         org: getOrgInfo(item.rp_name_obj),
@@ -711,7 +711,7 @@ function getNodeList(allRows) {
     }
   });
   allRows.rpAs.forEach((item) => {
-    if (!asList.find(node => node.nodeId === item.as_id)) {
+    if (!asList.find(node => node.id === item.as_id)) {
       asList.push({
         id: item.as_id,
         org: getOrgInfo(item.rp_name_obj),
