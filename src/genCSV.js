@@ -808,6 +808,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
     .reduce((prev, curr) => prev.concat(curr), []);
   createFile(pendingParser.parse(allPendingReqRows.sort(heightCompare)), 'csv/pending.csv', outputDirPath);
+  console.log(`pending.csv created at ${join(outputDirPath, 'csv')}`);
 
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
@@ -833,6 +834,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     });
     const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
     createFile(csv, `csv/rp-idp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-idp')}`);
 
     const idpList = [];
     rpIdp.forEach((item) => {
@@ -841,12 +843,14 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       }
     });
     genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idpList, false, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-idp-summary')}`);
 
     const rpNdidCsv = rpNdidParser
       .parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
     createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
 
     genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-ndid-summary')}`);
   });
 
   orgList.rpList.forEach((rpMktName) => {
@@ -920,6 +924,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     const rpSumByOrgParser = new Json2csvParser({ fields: fieldsRpSummaryByOrg });
     const csv = rpSumByOrgParser.parse([idpRow, asRow, totalRow]);
     createFile(csv, `csv/rp-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-summary-by-org')}`);
 
     // #################################
     // RP-IdP Summary by Org
@@ -960,6 +965,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const rpIdpSumByOrgParser = new Json2csvParser({ fields: fieldsRpIdpSummaryByOrg });
     createFile(rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows), `csv/rp-idp-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-idp-summary-by-org')}`);
 
     // #################################
     // RP-AS Summary by Org
@@ -998,6 +1004,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
     createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-as-summary-by-org')}`);
 
     // #################################
     // RP-NDID Summary by Org
@@ -1010,6 +1017,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       ndidPrice: _.sum(rpNdidRows.map(row => row.price)),
     }];
     createFile(rpNdidSumByOrgParser.parse(rpNdidSumByOrg), `csv/rp-ndid-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-ndid-summary-by-org')}`);
   });
 
   nodeList.idpList.forEach(({ id }) => {
@@ -1021,6 +1029,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     });
     const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
     createFile(csv, `csv/idp-rp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/idp-rp')}`);
 
     const rpList = [];
     idpRp.forEach((item) => {
@@ -1029,6 +1038,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       }
     });
     genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/idp-rp-summary')}`);
   });
 
   // #################################
@@ -1073,6 +1083,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const idpRpSumByOrgParser = new Json2csvParser({ fields: fieldsIdpRpSummaryByOrg });
     createFile(idpRpSumByOrgParser.parse(idpRpSumByOrgRows), `csv/idp-rp-summary-by-org/${idpMktName}.csv`, outputDirPath);
+    console.log(`${idpMktName}.csv created at ${join(outputDirPath, 'csv/idp-rp-summary-by-org')}`);
   });
 
   nodeList.rpList.forEach(({ id }) => {
@@ -1096,6 +1107,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       }
     });
     genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-as-summary')}`);
   });
 
   nodeList.asList.forEach(({ id }) => {
@@ -1107,6 +1119,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
     });
     const csv = rpAsParser.parse(asRp.sort(heightCompare));
     createFile(csv, `csv/as-rp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/as-rp')}`);
 
     const asList = [];
     asRp.forEach((item) => {
@@ -1119,6 +1132,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       }
     });
     genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/as-rp-summary')}`);
   });
 
   // #################################
@@ -1161,6 +1175,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
 
     const asRpSumByOrgParser = new Json2csvParser({ fields: fieldsAsRpSummaryByOrg });
     createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `csv/as-rp-summary-by-org/${asMktName}.csv`, outputDirPath);
+    console.log(`${asMktName}.csv created at ${join(outputDirPath, 'csv/as-rp-summary-by-org')}`);
   });
 
   // #################################
@@ -1191,6 +1206,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
       summary.total = _.round(summary.idp + summary.as + summary.rp + summary.ndid, 2);
 
       createFile(sumByOrgParser.parse([summary]), `csv/summary-by-org/${mktName}.csv`, outputDirPath);
+      console.log(`${mktName}.csv created at ${join(outputDirPath, 'csv/summary-by-org')}`);
     });
 }
 
