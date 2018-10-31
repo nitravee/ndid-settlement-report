@@ -113,7 +113,7 @@ importPriceListDirectories(pricesDirPath)
       });
     }
 
-    const categorizedReqs = categorizeRequests(reqData);
+    const categorizedReqs = categorizeRequests(reqData, prevPendingReqs);
     console.log('Calculating settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
