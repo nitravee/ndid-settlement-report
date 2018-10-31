@@ -2,13 +2,15 @@ const { argv } = require('yargs');
 const path = require('path');
 const fs = require('fs');
 const mkpath = require('mkpath');
-const { importNodeInfo } = require('./src/importNodeInfo');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
 const { categorizeRequests } = require('./src/categorizeRequests');
 const { createSummaryReport } = require('./src/createSummaryReport');
 const { genCSV } = require('./src/genCSV');
+const { queryNodeInfo } = require('./src/queryNodeInfo');
+const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
+
 
 let minHeight;
 let maxHeight;
@@ -18,6 +20,7 @@ let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
 let outputPath = path.resolve(__dirname, './reports');
+
 
 const currWorkingPath = process.cwd();
 if (argv.b) {
@@ -47,6 +50,7 @@ if (argv.o) {
 
 const enableDebugFile = argv['debug-file'];
 
+
 console.log('Started generating settlement reports.');
 
 console.log(`\nNodeInfo Dir: ${nodeInfoDirPath}`);
@@ -67,7 +71,7 @@ if (enableDebugFile) {
 }
 
 importPriceListDirectories(pricesDirPath)
-  .then((priceList) => {
+  .then(async (priceList) => {
     const priceCategories = getPriceCategories(priceList);
     console.log('\nImporting price list succeeded.');
     if (enableDebugFile) {
@@ -79,16 +83,6 @@ importPriceListDirectories(pricesDirPath)
       fs.writeFile(path.resolve(debugFileDirPath, './priceCategories.json'), JSON.stringify(priceCategories, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceCategories.json', err);
-        }
-      });
-    }
-
-    const nodeInfo = importNodeInfo(nodeInfoDirPath);
-    console.log('Importing node info succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: nodeInfo.json', err);
         }
       });
     }
@@ -133,6 +127,18 @@ importPriceListDirectories(pricesDirPath)
       });
     }
 
+    const nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
+      .values(settlementWithPrice)
+      .map(req => req.settlement)));
+    console.log('Querying node info succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: nodeInfo.json', err);
+        }
+      });
+    }
+
     // Generate pending requests JSON file
     fs.writeFile(path.join(outputPath, './pendingRequests.json'), JSON.stringify(categorizedReqs.pendingRequests, null, 2), (err) => {
       if (err) {
@@ -140,7 +146,6 @@ importPriceListDirectories(pricesDirPath)
       }
     });
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
-
 
     genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, priceCategories, outputPath);
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);

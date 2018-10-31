@@ -10,6 +10,7 @@ services:
       - MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
       - START_BLOCK=${MIN_BLOCK_HEIGHT}
       - END_BLOCK=${MIN_BLOCK_HEIGHT}
+      - DEBUG_FILE=${DEBUG_FILE}
     security_opt:
       - no-new-privileges
     volumes:
