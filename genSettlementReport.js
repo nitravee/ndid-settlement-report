@@ -2,6 +2,7 @@ const { argv } = require('yargs');
 const path = require('path');
 const fs = require('fs');
 const mkpath = require('mkpath');
+const moment = require('moment');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
@@ -69,6 +70,22 @@ if (enableDebugFile) {
 } else {
   mkpath.sync(outputPath);
 }
+
+const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss')
+  .format('D-MMM-YYYY HH:mm:ss');
+
+// Generate report info file
+fs.writeFile(
+  path.join(outputPath, './info.txt'),
+  `Execution datetime: ${execDatetime} 
+  Min block height: ${minHeight}
+  Max block height: ${maxHeight}`,
+  (err) => {
+    if (err) {
+      throw err;
+    }
+  },
+);
 
 importPriceListDirectories(pricesDirPath)
   .then(async (priceList) => {
