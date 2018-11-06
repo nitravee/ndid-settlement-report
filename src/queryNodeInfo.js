@@ -25,10 +25,8 @@ async function queryNodeInfo(nodeIds = []) {
     results.forEach(({ id, info }) => {
       nodeInfo[id] = info;
 
-      nodeInfo[id].node_name_obj = {};
       try {
-        nodeInfo[id].node_name_obj =
-          nodeInfo[id].node_name ? JSON.parse(nodeInfo[id].node_name) : {};
+        nodeInfo[id].node_name_obj = JSON.parse(nodeInfo[id].node_name);
       } catch (e) {
         console.warn(`Cannot parse node_name of node id: ${id}, node_name: ${nodeInfo[id].node_name}`);
       }

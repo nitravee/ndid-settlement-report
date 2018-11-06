@@ -555,7 +555,7 @@ function getNodeName(aNodeInfo = {}) {
 }
 
 function getNodeNameObj(aNodeInfo = {}) {
-  return aNodeInfo.node_name_obj || {};
+  return aNodeInfo.node_name_obj;
 }
 
 function getNodeNames(nodeInfo, nodeIds) {
@@ -626,7 +626,9 @@ function genRowsFromRequest(req, nodeInfo) {
     request.price = _.round(item.idp_price, 2);
     request.full_price = _.round(item.idp_full_price, 2);
 
-    rpIdp.push(request);
+    if (request.rp_name_obj != null && request.idp_name_obj != null) {
+      rpIdp.push(request);
+    }
   });
 
   const rpAs = [];
@@ -650,10 +652,13 @@ function genRowsFromRequest(req, nodeInfo) {
     request.price = _.round(item.as_price, 2);
     request.full_price = _.round(item.as_full_price, 2);
 
-    rpAs.push(request);
+    if (request.rp_name_obj != null && request.as_name_obj != null) {
+      rpAs.push(request);
+    }
   });
 
-  const rpNdid = [{
+
+  const rpNdid = getNodeNameObj(nodeInfo[settlement.requester_node_id]) != null ? [{
     rp_id: settlement.requester_node_id,
     rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
     rp_name_obj: getNodeNameObj(nodeInfo[settlement.requester_node_id]),
@@ -664,7 +669,7 @@ function genRowsFromRequest(req, nodeInfo) {
     height: settlement.height,
     mode: settlement.mode,
     price: NDID_PRICE_PER_REQ,
-  }];
+  }] : [];
 
   return {
     rpIdp,
@@ -689,9 +694,18 @@ function getOrgInfo(nodeNameObj) {
 }
 
 function getOrgList(nodeList) {
-  const rpList = _.uniq(nodeList.rpList.map(nodeInfo => nodeInfo.org.marketingNameEn));
-  const idpList = _.uniq(nodeList.idpList.map(nodeInfo => nodeInfo.org.marketingNameEn));
-  const asList = _.uniq(nodeList.asList.map(nodeInfo => nodeInfo.org.marketingNameEn));
+  const rpList = _.uniq(nodeList
+    .rpList
+    .map(nodeInfo => nodeInfo.org && nodeInfo.org.marketingNameEn)
+    .filter(orgName => orgName));
+  const idpList = _.uniq(nodeList
+    .idpList
+    .map(nodeInfo => nodeInfo.org && nodeInfo.org.marketingNameEn)
+    .filter(orgName => orgName));
+  const asList = _.uniq(nodeList
+    .asList
+    .map(nodeInfo => nodeInfo.org && nodeInfo.org.marketingNameEn)
+    .filter(orgName => orgName));
 
   return {
     rpList,
