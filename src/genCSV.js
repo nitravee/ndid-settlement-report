@@ -44,10 +44,10 @@ const fieldsPending = [
     value: 'idp_names',
   }, {
     label: 'Requested IAL',
-    value: 'ial',
+    value: 'min_ial',
   }, {
     label: 'Requested AAL',
-    value: 'aal',
+    value: 'min_aal',
   }, {
     label: 'AS Service ID',
     value: 'service_id',
@@ -142,9 +142,15 @@ const fieldsRpIdp = [
     value: row => row.idp_name_obj.proxy_or_subsidiary_name_en,
   }, {
     label: 'Requested IAL',
-    value: 'ial',
+    value: 'min_ial',
   }, {
     label: 'Requested AAL',
+    value: 'min_aal',
+  }, {
+    label: 'Response IAL',
+    value: 'ial',
+  }, {
+    label: 'Response AAL',
     value: 'aal',
   }, {
     label: 'IdP Response',
@@ -571,8 +577,8 @@ function genRowsFromPendingRequest(req, nodeInfo) {
       mode: settlement.mode,
       idp_ids: detail.idp_id_list.join(', '),
       idp_names: getNodeNames(nodeInfo, detail.idp_id_list),
-      ial: detail.min_ial,
-      aal: detail.min_aal,
+      min_ial: detail.min_ial,
+      min_aal: detail.min_aal,
       service_id,
       as_ids: as_id_list.join(', '),
       as_names: getNodeNames(nodeInfo, as_id_list),
@@ -599,6 +605,8 @@ function genRowsFromRequest(req, nodeInfo) {
     request.idp_id = item.idp_id;
     request.idp_name = getNodeName(nodeInfo[item.idp_id]);
     request.idp_name_obj = getNodeNameObj(nodeInfo[item.idp_id]);
+    request.min_ial = item.min_ial;
+    request.min_aal = item.min_aal;
     request.ial = item.ial;
     request.aal = item.aal;
     request.response = item.status;
@@ -943,9 +951,9 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
           result[idpMktName] = { org: idpMktName };
         }
 
-        const { ial, aal } = curr;
+        const { min_ial, min_aal } = curr;
 
-        result[idpMktName][`${ial} ${aal}`] = (result[idpMktName][`${ial} ${aal}`] || 0) + curr.price;
+        result[idpMktName][`${min_ial} ${min_aal}`] = (result[idpMktName][`${min_ial} ${min_aal}`] || 0) + curr.price;
         return result;
       }, {});
     const rpIdpSumByOrgRows = Object.values(rpIdpSumByOrg);

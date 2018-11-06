@@ -2,6 +2,9 @@
   "extends": "airbnb-base",
   "rules": {
     "no-await-in-loop": 0,
-    "no-plusplus": 1
+    "no-plusplus": 1,
+    "guard-for-in": 0,
+    "no-restricted-syntax": 0,
+    "no-loop-func": 0
   }
 }

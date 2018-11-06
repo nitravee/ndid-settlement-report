@@ -187,7 +187,7 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
 
   currReqIds.forEach((reqId) => {
     const { steps, detail } = currReqs[reqId];
-    const { request_id } = detail;
+    const { request_id, min_aal, min_ial } = detail;
 
     const idpList = [];
     const asList = [];
@@ -212,6 +212,8 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
               idpList.push({
                 idp_id,
                 status,
+                min_ial,
+                min_aal,
                 ial,
                 aal,
                 valid_signature,
@@ -229,7 +231,7 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
       .filter(nodeId =>
         !idpList.map(idpSettlementInfo => idpSettlementInfo.idp_id).includes(nodeId));
     idpList.push(...notAnswerIdpNodeIds.map(nodeId => ({
-      idp_id: nodeId, status: 'Not Answer', ial: detail.min_ial, aal: detail.min_aal, idp_fee_ratio: 0,
+      idp_id: nodeId, status: 'Not Answer', min_ial: detail.min_ial, min_aal: detail.min_aal, idp_fee_ratio: 0,
     })));
 
     asList.push(...detail.data_request_list

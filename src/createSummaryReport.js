@@ -241,9 +241,9 @@ const _ = require('lodash');
 //     }
 // }
 
-function getIdpFullPrice(idpPriceList, nodeId, aal, ial) {
+function getIdpFullPrice(idpPriceList, nodeId, requestedAal, requestedIal) {
   const nodePriceList = idpPriceList[nodeId] || {};
-  return (nodePriceList[aal] && nodePriceList[aal][ial]) || 0;
+  return (nodePriceList[requestedAal] && nodePriceList[requestedAal][requestedIal]) || 0;
 }
 
 function getAsFullPrice(asPriceList, nodeId, serviceId) {
@@ -252,32 +252,29 @@ function getAsFullPrice(asPriceList, nodeId, serviceId) {
 }
 
 function createSummaryReport(objData, priceList) {
-  let idp_price = 0;
-  let idp_full_price = 0;
-  let as_price = 0;
-  // const data = JSON.parse(fs.readFileSync('expectedPriceList.json'));
-
   const result = _.cloneDeep(objData);
 
-  for(let rootName in result) {
+  for (const rootName in result) {
+    const { settlement } = result[rootName];
     const scopedPriceList = priceList
-        .filter((item) => {
-          if (item.max_block_height == null) {
-            return result[rootName].settlement.height >= item.min_block_height;
-          }
-          return result[rootName].settlement.height >= item.min_block_height && result[rootName].settlement.height <= item.max_block_height;
-        })[0]['prices'];
-        result[rootName].settlement.idpList.forEach((dataInIdpList,index) => {
-        const {aal, ial, idp_id,} = dataInIdpList
-        idp_full_price = getIdpFullPrice(scopedPriceList['idp'], idp_id, aal, ial);
-        idp_price = idp_full_price * dataInIdpList.idp_fee_ratio;
-        result[rootName].settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price };
+      .filter((item) => {
+        if (item.max_block_height == null) {
+          return settlement.height >= item.min_block_height;
+        }
+        return settlement.height >= item.min_block_height
+          && settlement.height <= item.max_block_height;
+      })[0].prices;
+    settlement.idpList.forEach((dataInIdpList, index) => {
+      const { idp_id, min_aal, min_ial } = dataInIdpList;
+      const idp_full_price = getIdpFullPrice(scopedPriceList.idp, idp_id, min_aal, min_ial);
+      const idp_price = idp_full_price * dataInIdpList.idp_fee_ratio;
+      settlement.idpList[index] = { ...dataInIdpList, idp_price, idp_full_price };
     });
-    result[rootName].settlement.asList.forEach((dataInAsList,index) => {  
+    settlement.asList.forEach((dataInAsList, index) => {
       const { as_id, service_id, as_fee_ratio } = dataInAsList;
-      as_full_price = getAsFullPrice(scopedPriceList['as'], as_id, service_id);
-      as_price = as_full_price * as_fee_ratio;
-      result[rootName].settlement.asList[index] = { ...dataInAsList, as_price, as_full_price }
+      const as_full_price = getAsFullPrice(scopedPriceList.as, as_id, service_id);
+      const as_price = as_full_price * as_fee_ratio;
+      settlement.asList[index] = { ...dataInAsList, as_price, as_full_price };
     });
   }
 
