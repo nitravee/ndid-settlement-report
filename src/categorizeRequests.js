@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { checkIfRequestHasCloseStep, checkIfRequestHasTimeOutStep } = require('./utils/requestUtil');
 
 // const checkConditionDetail = {
 //   statusAcceptGreaterThanOrEqualMinIdp: (responseList, minIdp) => {
@@ -186,7 +187,8 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
     });
 
   currReqIds.forEach((reqId) => {
-    const { steps, detail } = currReqs[reqId];
+    const req = currReqs[reqId];
+    const { steps, detail } = req;
     const { request_id, min_aal, min_ial } = detail;
 
     const idpList = [];
@@ -247,6 +249,8 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
       }))
       .reduce((prev, curr) => prev.concat(curr), []));
 
+    const isClosed = checkIfRequestHasCloseStep(req);
+    const isTimedOut = checkIfRequestHasTimeOutStep(req);
     settlement = {
       request_id,
       requester_node_id,
@@ -254,12 +258,12 @@ function categorizeRequests(currReqs, prevPendingReqs = {}) {
       idpList,
       asList,
       mode: detail.mode,
-      closed: detail.closed,
-      timed_out: detail.timed_out,
+      closed: isClosed,
+      timed_out: isTimedOut,
       status: getSettlementReqStatus(detail),
     };
 
-    if (!settlement.closed && !settlement.timed_out) {
+    if (!isClosed && !isTimedOut) {
       pendingRequests[reqId] = { ...currReqs[reqId], settlement };
     } else {
       finishedRequests[reqId] = { ...currReqs[reqId], settlement };

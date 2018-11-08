@@ -7,6 +7,16 @@ function getNodeIdsFromSettlements(settlements = []) {
       .concat(stmt.asList.map(as => as.as_id)))));
 }
 
+function checkIfRequestHasCloseStep(request) {
+  return request.steps.filter(step => step.method === 'CloseRequest').length > 0;
+}
+
+function checkIfRequestHasTimeOutStep(request) {
+  return request.steps.filter(step => step.method === 'TimeOutRequest').length > 0;
+}
+
 module.exports = {
   getNodeIdsFromSettlements,
+  checkIfRequestHasCloseStep,
+  checkIfRequestHasTimeOutStep,
 };
