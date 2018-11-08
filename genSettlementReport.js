@@ -15,7 +15,6 @@ const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 
 let minHeight;
 let maxHeight;
-let nodeInfoDirPath = path.resolve(__dirname, './data/NodeInfo');
 let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport');
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
@@ -29,9 +28,6 @@ if (argv.b) {
 }
 if (argv.e) {
   maxHeight = parseInt(argv.e, 10);
-}
-if (argv.i) {
-  nodeInfoDirPath = path.resolve(currWorkingPath, argv.i);
 }
 if (argv.r) {
   usedTokenReportDirPath = path.resolve(currWorkingPath, argv.r);
@@ -50,11 +46,14 @@ if (argv.o) {
 }
 
 const enableDebugFile = argv['debug-file'];
+const nodeInfoJsonFilePath = argv['node-info-json'];
 
 
 console.log('Started generating settlement reports.');
 
-console.log(`\nNodeInfo Dir: ${nodeInfoDirPath}`);
+if (nodeInfoJsonFilePath) {
+  console.log(`nodeInfo.json Path: ${nodeInfoJsonFilePath}`);
+}
 console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
 console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
 console.log(`Prices Dir: ${pricesDirPath}`);
@@ -144,10 +143,15 @@ importPriceListDirectories(pricesDirPath)
       });
     }
 
-    const nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
-      .values(settlementWithPrice)
-      .map(req => req.settlement)));
-    console.log('Querying node info succeeded.');
+    let nodeInfo;
+    if (nodeInfoJsonFilePath) {
+      nodeInfo = JSON.parse(fs.readFileSync(nodeInfoJsonFilePath));
+    } else {
+      nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
+        .values(settlementWithPrice)
+        .map(req => req.settlement)));
+      console.log('Querying node info succeeded.');
+    }
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
         if (err) {
