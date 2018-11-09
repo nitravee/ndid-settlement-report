@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const path = require('path');
+const mkpath = require('mkpath');
 const Excel = require('exceljs');
 const moment = require('moment');
 const { setOuterBorder, setBorder, setSolidFill } = require('./utils/excelUtil');
@@ -228,7 +229,10 @@ function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, output
   settleValueCell.value = billToSummary.total.netTotal - payToSummary.total.netTotal;
   settleValueCell.numFmt = MONEY_NUM_FMT;
 
-  workbook.xlsx.writeFile(path.join(outputDirPath, `csv/summary-by-org/${memberName}.xlsx`))
+  const folderPath = path.join(outputDirPath, 'csv/summary-by-org');
+  mkpath.sync(folderPath);
+  const filePath = path.join(folderPath, `${memberName}.xlsx`);
+  workbook.xlsx.writeFile(filePath)
     .catch((err) => {
       console.error(`ERROR: Failed to write csv/summary-by-org/${memberName}.xlsx.`, err);
     });
