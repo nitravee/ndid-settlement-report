@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const path = require('path');
 const Excel = require('exceljs');
-const { argv } = require('yargs');
 const { setOuterBorder, setBorder, setSolidFill } = require('./utils/excelUtil');
 
 
@@ -53,6 +52,7 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
   let tableItemRowIndex = tableHeaderRowIndex + 1;
   summary.members.forEach((member) => {
     member.items.forEach((memberItem, idx) => {
+      /* eslint-disable no-param-reassign */
       setBorder(sheet, tableItemRowIndex, 1, tableItemRowIndex, LAST_COL_INDEX);
       sheet.getRow(tableItemRowIndex).font = DEFAULT_FONT;
 
@@ -77,6 +77,7 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
       sheet.getCell(tableItemRowIndex, 7).numFmt = MONEY_NUM_FMT;
 
       tableItemRowIndex += 1;
+      /* eslint-enable no-param-reassign */
     });
   });
 
@@ -187,7 +188,8 @@ function genXlsxFile(memberName, period, payToSummary, billToSummary, outputDirP
   };
 
   // Pay To Table
-  const lastPayToTableRowIndex = writeSummaryTable(sheet, payToSectHeaderRowIndex + 1, payToSummary);
+  const lastPayToTableRowIndex =
+    writeSummaryTable(sheet, payToSectHeaderRowIndex + 1, payToSummary);
 
   // Bill To Sect Header
   const bilToSectHeaderRowIndex = lastPayToTableRowIndex + 1;
