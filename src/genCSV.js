@@ -825,7 +825,7 @@ function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategories, outputDirPath) {
+function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategories, billPeriod, outputDirPath) {
   const allPendingReqIds = Object.keys(pendingRequests);
   const allPendingReqRows = allPendingReqIds
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
@@ -1204,7 +1204,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
   // #################################
   // Summary by Org
   // #################################
-    genSummaryByOrgReport(allRows, orgList, 'xxxx', outputDirPath);
+  genSummaryByOrgReport(allRows, orgList, billPeriod, outputDirPath);
 }
 
 module.exports.genCSV = genCSV;

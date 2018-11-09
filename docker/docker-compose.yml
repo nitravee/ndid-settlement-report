@@ -12,6 +12,8 @@ services:
       - END_BLOCK=${MIN_BLOCK_HEIGHT}
       - DEBUG_FILE=${DEBUG_FILE}
       - EXEC_DATETIME=${DATETIME}
+      - BILL_PERIOD_START=${BILL_PERIOD_START}
+      - BILL_PERIOD_END=${BILL_PERIOD_END}
     security_opt:
       - no-new-privileges
     volumes:

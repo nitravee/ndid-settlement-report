@@ -45,6 +45,23 @@ if (argv.o) {
   outputPath = path.resolve(currWorkingPath, argv.o);
 }
 
+let billPeriod = null;
+const billPeriodStartStr = argv['bill-period-start'];
+const billPeriodEndStr = argv['bill-period-end'];
+const billPeriodStart = billPeriodStartStr ? new Date(billPeriodStartStr) : null;
+const billPeriodEnd = billPeriodEndStr ? new Date(billPeriodEndStr) : null;
+if (
+  billPeriodStart &&
+  !Number.isNaN(billPeriodStart.getTime()) &&
+  billPeriodEnd &&
+  !Number.isNaN(billPeriodEnd.getTime())
+) {
+  billPeriod = {
+    start: billPeriodStart,
+    end: billPeriodEnd,
+  };
+}
+
 const enableDebugFile = argv['debug-file'];
 const nodeInfoJsonFilePath = argv['node-info-json'];
 
@@ -167,8 +184,8 @@ importPriceListDirectories(pricesDirPath)
       }
     });
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
-
-    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, priceCategories, outputPath);
+    
+    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, priceCategories, billPeriod, outputPath);
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
 
     console.log('\nGenerating settlement reports succeeded.');

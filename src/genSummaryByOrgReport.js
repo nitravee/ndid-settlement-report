@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const path = require('path');
 const Excel = require('exceljs');
+const moment = require('moment');
 const { setOuterBorder, setBorder, setSolidFill } = require('./utils/excelUtil');
 
 
@@ -109,7 +110,7 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
   return tableTotalRowIndex;
 }
 
-function genXlsxFile(memberName, period, payToSummary, billToSummary, outputDirPath) {
+function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, outputDirPath) {
   const workbook = new Excel.Workbook();
   workbook.creator = 'NDID';
   workbook.lastModifiedBy = 'NDID';
@@ -151,7 +152,8 @@ function genXlsxFile(memberName, period, payToSummary, billToSummary, outputDirP
     bold: true,
   });
   const billPeriodValueCell = sheet.getCell(2, 2);
-  billPeriodValueCell.value = 'xxxxxxxx';
+  billPeriodValueCell.value =
+    `${moment(billPeriod.start).format('D MMMM YYYY H:mm')} - ${moment(billPeriod.end).format('D MMMM YYYY H:mm')}`;
   billPeriodValueCell.font = DEFAULT_FONT;
 
   // Member Name
@@ -232,7 +234,7 @@ function genXlsxFile(memberName, period, payToSummary, billToSummary, outputDirP
     });
 }
 
-function genSummaryByOrgReport(allRows, orgList, period, outputDirPath) {
+function genSummaryByOrgReport(allRows, orgList, billPeriod, outputDirPath) {
   _
     .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
     .forEach((mktName) => {
@@ -347,7 +349,7 @@ function genSummaryByOrgReport(allRows, orgList, period, outputDirPath) {
           .flatten(billToSummary.members.map(member => member.items)).map(item => item.netTotal)),
       };
 
-      genXlsxFile(mktName, 'xxxxx', payToSummary, billToSummary, outputDirPath);
+      genXlsxFile(mktName, billPeriod, payToSummary, billToSummary, outputDirPath);
       console.log(`${mktName}.xlsx created at ${path.join(outputDirPath, 'csv/summary-by-org')}`);
     });
 }
