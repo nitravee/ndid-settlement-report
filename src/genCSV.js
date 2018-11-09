@@ -8,6 +8,7 @@ const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
 const { financialNumberFormat } = require('./utils/csvUtil');
+const { genSummaryByOrgReport } = require('./genSummaryByOrgReport');
 
 const NDID_PRICE_PER_REQ = 5;
 
@@ -1203,33 +1204,7 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
   // #################################
   // Summary by Org
   // #################################
-  _
-    .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
-    .forEach((mktName) => {
-      const rpRows = [
-        ...allRows.rpIdp.filter(row =>
-          row.rp_name_obj.marketing_name_en === mktName),
-        ...allRows.rpAs.filter(row =>
-          row.rp_name_obj.marketing_name_en === mktName),
-      ];
-      const idpRows = allRows.rpIdp.filter(row =>
-        row.idp_name_obj.marketing_name_en === mktName);
-      const asRows = allRows.rpAs.filter(row =>
-        row.as_name_obj.marketing_name_en === mktName);
-      const ndidRows = allRows.rpNdid.filter(row =>
-        row.rp_name_obj.marketing_name_en === mktName);
-
-      const summary = {
-        rp: _.round(_.sum(rpRows.map(row => row.price)) * -1, 2),
-        idp: _.round(_.sum(idpRows.map(row => row.price)), 2),
-        as: _.round(_.sum(asRows.map(row => row.price)), 2),
-        ndid: _.round(_.sum(ndidRows.map(row => row.price)) * -1, 2),
-      };
-      summary.total = _.round(summary.idp + summary.as + summary.rp + summary.ndid, 2);
-
-      createFile(sumByOrgParser.parse([summary]), `csv/summary-by-org/${mktName}.csv`, outputDirPath);
-      console.log(`${mktName}.csv created at ${join(outputDirPath, 'csv/summary-by-org')}`);
-    });
+    genSummaryByOrgReport(allRows, orgList, 'xxxx', outputDirPath);
 }
 
 module.exports.genCSV = genCSV;
