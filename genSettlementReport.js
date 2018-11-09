@@ -6,6 +6,7 @@ const moment = require('moment');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
+const { mergePrevPendingReqsToCurrReqs } = require('./src/mergePrevPendingReqsToCurrReqs');
 const { categorizeRequests } = require('./src/categorizeRequests');
 const { createSummaryReport } = require('./src/createSummaryReport');
 const { genCSV } = require('./src/genCSV');
@@ -130,17 +131,27 @@ importPriceListDirectories(pricesDirPath)
       });
     }
 
-    const reqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
+    const importedReqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
     console.log('Importing blockchain query data succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(reqData, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(importedReqData, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: queryDataJson.json', err);
         }
       });
     }
 
-    const categorizedReqs = categorizeRequests(reqData, prevPendingReqs);
+    const reqData = mergePrevPendingReqsToCurrReqs(importedReqData, prevPendingReqs);
+    console.log('Importing blockchain query data succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './mergedReqData.json'), JSON.stringify(reqData, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: mergedReqData.json', err);
+        }
+      });
+    }
+
+    const categorizedReqs = categorizeRequests(reqData);
     console.log('Calculating settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {

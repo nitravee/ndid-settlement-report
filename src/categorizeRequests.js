@@ -158,33 +158,13 @@ function getSettlementReqStatus(reqDetail) {
   return status;
 }
 
-function categorizeRequests(currReqs, prevPendingReqs = {}) {
+function categorizeRequests(currReqs) {
   let settlement = {};
   let requester_node_id = 0;
   const finishedRequests = {};
   const pendingRequests = {};
   const currReqIds = Object.keys(currReqs);
 
-  // Forward prev pending requests which still be pending in the block height range
-  Object
-    .keys(prevPendingReqs)
-    .filter(reqId => !currReqIds.includes(reqId))
-    .forEach((reqId) => {
-      pendingRequests[reqId] = prevPendingReqs[reqId];
-    });
-
-  // Merge prev pending requests into the current block height range's one if possible
-  Object
-    .keys(prevPendingReqs)
-    .filter(reqId => currReqIds.includes(reqId))
-    .forEach((reqId) => {
-      const prevPendReq = prevPendingReqs[reqId];
-      const currReq = currReqs[reqId];
-      currReq.steps = [
-        ...prevPendReq.steps,
-        ...currReq.steps,
-      ];
-    });
 
   currReqIds.forEach((reqId) => {
     const req = currReqs[reqId];
