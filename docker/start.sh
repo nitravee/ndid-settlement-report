@@ -31,8 +31,8 @@ node ./settlement-report/genSettlementReport \
   -b "${MIN_BLOCK_HEIGHT}" \
   -e "${MAX_BLOCK_HEIGHT}" \
   -o ./Reports \
-  --bill-period-start=$BILL_PERIOD_START \
-  --bill-period-end=$BILL_PERIOD_END \
+  --bill-period-start="${BILL_PERIOD_START}" \
+  --bill-period-end="${BILL_PERIOD_END}" \
   --tm-rpc-ip=$TM_RPC_IP \
   --tm-rpc-port=$TM_RPC_PORT \
   --debug-file=$CREATE_DEBUG_FILE

@@ -49,8 +49,8 @@ if (argv.o) {
 let billPeriod = null;
 const billPeriodStartStr = argv['bill-period-start'];
 const billPeriodEndStr = argv['bill-period-end'];
-const billPeriodStart = billPeriodStartStr ? new Date(billPeriodStartStr) : null;
-const billPeriodEnd = billPeriodEndStr ? new Date(billPeriodEndStr) : null;
+const billPeriodStart = billPeriodStartStr ? moment(billPeriodStartStr, 'D-MMM-YY H:mm').toDate() : null;
+const billPeriodEnd = billPeriodEndStr ? moment(billPeriodEndStr, 'D-MMM-YY H:mm').toDate() : null;
 if (
   billPeriodStart &&
   !Number.isNaN(billPeriodStart.getTime()) &&
@@ -80,6 +80,9 @@ console.log(`Output Dir: ${outputPath}`);
 
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
+console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.start : 'Not specific'}`);
+console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
+
 
 const debugFileDirPath = path.resolve(outputPath, './debug');
 if (enableDebugFile) {
