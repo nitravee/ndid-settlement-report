@@ -91,7 +91,7 @@ async function importPriceListDirectories(rootDirPath) {
   const dirPaths = getDirectories(rootDirPath);
   const minHeights = dirPaths
     .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
-    .sort();
+    .sort((a, b) => a - b);
 
   const result = [];
   for (let i = 0; i < minHeights.length; i++) {
