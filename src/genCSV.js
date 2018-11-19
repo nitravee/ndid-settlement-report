@@ -729,7 +729,7 @@ function getNodeList(allRows) {
     if (!idpList.find(node => node.id === item.idp_id)) {
       idpList.push({
         id: item.idp_id,
-        org: getOrgInfo(item.rp_name_obj),
+        org: getOrgInfo(item.idp_name_obj),
       });
     }
   });
@@ -737,7 +737,7 @@ function getNodeList(allRows) {
     if (!asList.find(node => node.id === item.as_id)) {
       asList.push({
         id: item.as_id,
-        org: getOrgInfo(item.rp_name_obj),
+        org: getOrgInfo(item.as_name_obj),
       });
     }
   });
