@@ -229,12 +229,12 @@ function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, output
   settleValueCell.value = billToSummary.total.netTotal - payToSummary.total.netTotal;
   settleValueCell.numFmt = MONEY_NUM_FMT;
 
-  const folderPath = path.join(outputDirPath, 'csv/summary-by-org');
+  const folderPath = path.join(outputDirPath, 'csv', memberName, 'summary-by-org');
   mkpath.sync(folderPath);
   const filePath = path.join(folderPath, `${memberName}.xlsx`);
   workbook.xlsx.writeFile(filePath)
     .catch((err) => {
-      console.error(`ERROR: Failed to write csv/summary-by-org/${memberName}.xlsx.`, err);
+      console.error(`ERROR: Failed to write csv/${memberName}/summary-by-org/${memberName}.xlsx.`, err);
     });
 }
 
@@ -354,7 +354,7 @@ function genSummaryByOrgReport(allRows, orgList, billPeriod, outputDirPath) {
       };
 
       genXlsxFile(mktName, billPeriod, payToSummary, billToSummary, outputDirPath);
-      console.log(`${mktName}.xlsx created at ${path.join(outputDirPath, 'csv/summary-by-org')}`);
+      console.log(`${mktName}.xlsx created at ${path.join(outputDirPath, 'csv', mktName, 'summary-by-org')}`);
     });
 }
 

@@ -682,11 +682,13 @@ function getOrgList(nodeList) {
     .asList
     .map(nodeInfo => nodeInfo.org && nodeInfo.org.marketingNameEn)
     .filter(orgName => orgName));
+  const allList = _.uniq([...rpList, ...idpList, ...asList]);
 
   return {
     rpList,
     idpList,
     asList,
+    allList,
   };
 }
 
@@ -830,7 +832,9 @@ function genCSV(
   const nodeList = getNodeList(allRows);
   const orgList = getOrgList(nodeList);
 
-  nodeList.rpList.forEach(({ id }) => {
+  orgList.allList.forEach(orgName => mkpath.sync(`csv/${orgName}`));
+
+  nodeList.rpList.forEach(({ id, org: { marketingNameEn } }) => {
     const rpIdp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.rp_id) {
@@ -838,8 +842,8 @@ function genCSV(
       }
     });
     const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
-    createFile(csv, `csv/rp-idp/${id}.csv`, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-idp')}`);
+    createFile(csv, `csv/${marketingNameEn}/rp-idp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-idp')}`);
 
     const idpList = [];
     rpIdp.forEach((item) => {
@@ -847,15 +851,16 @@ function genCSV(
         idpList.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`csv/rp-idp-summary/${id}.csv`, rpIdp, idpList, false, nodeInfo, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-idp-summary')}`);
+    genSummaryRpIdp(`csv/${marketingNameEn}/rp-idp-summary/${id}.csv`, rpIdp, idpList, false, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-idp-summary')}`);
 
     const rpNdidCsv = rpNdidParser
       .parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
-    createFile(rpNdidCsv, `csv/rp-ndid/${id}.csv`, outputDirPath);
+    createFile(rpNdidCsv, `csv/${marketingNameEn}/rp-ndid/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-ndid')}`);
 
-    genSummaryRpNdid(`csv/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-ndid-summary')}`);
+    genSummaryRpNdid(`csv/${marketingNameEn}/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-ndid-summary')}`);
   });
 
   orgList.rpList.forEach((rpMktName) => {
@@ -928,8 +933,8 @@ function genCSV(
 
     const rpSumByOrgParser = new Json2csvParser({ fields: fieldsRpSummaryByOrg });
     const csv = rpSumByOrgParser.parse([idpRow, asRow, totalRow]);
-    createFile(csv, `csv/rp-summary-by-org/${rpMktName}.csv`, outputDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-summary-by-org')}`);
+    createFile(csv, `csv/${rpMktName}/rp-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv', rpMktName, 'rp-summary-by-org')}`);
 
     // #################################
     // RP-IdP Summary by Org
@@ -969,8 +974,8 @@ function genCSV(
         })));
 
     const rpIdpSumByOrgParser = new Json2csvParser({ fields: fieldsRpIdpSummaryByOrg });
-    createFile(rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows), `csv/rp-idp-summary-by-org/${rpMktName}.csv`, outputDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-idp-summary-by-org')}`);
+    createFile(rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows), `csv/${rpMktName}/rp-idp-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv', rpMktName, 'rp-idp-summary-by-org')}`);
 
     // #################################
     // RP-AS Summary by Org
@@ -1008,8 +1013,8 @@ function genCSV(
         })));
 
     const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
-    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-as-summary-by-org')}`);
+    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `csv/${rpMktName}/rp-as-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv', rpMktName, 'rp-as-summary-by-org')}`);
 
     // #################################
     // RP-NDID Summary by Org
@@ -1021,11 +1026,11 @@ function genCSV(
       numberOfTxns: rpNdidRows.length,
       ndidPrice: _.sum(rpNdidRows.map(row => row.price)),
     }];
-    createFile(rpNdidSumByOrgParser.parse(rpNdidSumByOrg), `csv/rp-ndid-summary-by-org/${rpMktName}.csv`, outputDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv/rp-ndid-summary-by-org')}`);
+    createFile(rpNdidSumByOrgParser.parse(rpNdidSumByOrg), `csv/${rpMktName}/rp-ndid-summary-by-org/${rpMktName}.csv`, outputDirPath);
+    console.log(`${rpMktName}.csv created at ${join(outputDirPath, 'csv', rpMktName, 'rp-ndid-summary-by-org')}`);
   });
 
-  nodeList.idpList.forEach(({ id }) => {
+  nodeList.idpList.forEach(({ id, org: { marketingNameEn } }) => {
     const idpRp = [];
     allRows.rpIdp.forEach((row) => {
       if (id === row.idp_id) {
@@ -1033,8 +1038,8 @@ function genCSV(
       }
     });
     const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
-    createFile(csv, `csv/idp-rp/${id}.csv`, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/idp-rp')}`);
+    createFile(csv, `csv/${marketingNameEn}/idp-rp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'idp-rp')}`);
 
     const rpList = [];
     idpRp.forEach((item) => {
@@ -1042,8 +1047,8 @@ function genCSV(
         rpList.push(item.rp_id);
       }
     });
-    genSummaryRpIdp(`csv/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/idp-rp-summary')}`);
+    genSummaryRpIdp(`csv/${marketingNameEn}/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'idp-rp-summary')}`);
   });
 
   // #################################
@@ -1087,11 +1092,11 @@ function genCSV(
         })));
 
     const idpRpSumByOrgParser = new Json2csvParser({ fields: fieldsIdpRpSummaryByOrg });
-    createFile(idpRpSumByOrgParser.parse(idpRpSumByOrgRows), `csv/idp-rp-summary-by-org/${idpMktName}.csv`, outputDirPath);
-    console.log(`${idpMktName}.csv created at ${join(outputDirPath, 'csv/idp-rp-summary-by-org')}`);
+    createFile(idpRpSumByOrgParser.parse(idpRpSumByOrgRows), `csv/${idpMktName}/idp-rp-summary-by-org/${idpMktName}.csv`, outputDirPath);
+    console.log(`${idpMktName}.csv created at ${join(outputDirPath, 'csv', idpMktName, 'idp-rp-summary-by-org')}`);
   });
 
-  nodeList.rpList.forEach(({ id }) => {
+  nodeList.rpList.forEach(({ id, org: { marketingNameEn } }) => {
     const rpAs = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.rp_id) {
@@ -1099,7 +1104,8 @@ function genCSV(
       }
     });
     const csv = rpAsParser.parse(rpAs.sort(heightCompare));
-    createFile(csv, `csv/rp-as/${id}.csv`, outputDirPath);
+    createFile(csv, `csv/${marketingNameEn}/rp-as/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-as')}`);
 
     const asList = [];
     rpAs.forEach((item) => {
@@ -1111,11 +1117,11 @@ function genCSV(
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/rp-as-summary')}`);
+    genSummaryRpAs(`csv/${marketingNameEn}/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'rp-as-summary')}`);
   });
 
-  nodeList.asList.forEach(({ id }) => {
+  nodeList.asList.forEach(({ id, org: { marketingNameEn } }) => {
     const asRp = [];
     allRows.rpAs.forEach((row) => {
       if (id === row.as_id) {
@@ -1123,8 +1129,8 @@ function genCSV(
       }
     });
     const csv = rpAsParser.parse(asRp.sort(heightCompare));
-    createFile(csv, `csv/as-rp/${id}.csv`, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/as-rp')}`);
+    createFile(csv, `csv/${marketingNameEn}/as-rp/${id}.csv`, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'as-rp')}`);
 
     const asList = [];
     asRp.forEach((item) => {
@@ -1136,8 +1142,8 @@ function genCSV(
         asList.push(as);
       }
     });
-    genSummaryRpAs(`csv/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputDirPath);
-    console.log(`${id}.csv created at ${join(outputDirPath, 'csv/as-rp-summary')}`);
+    genSummaryRpAs(`csv/${marketingNameEn}/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputDirPath);
+    console.log(`${id}.csv created at ${join(outputDirPath, 'csv', marketingNameEn, 'as-rp-summary')}`);
   });
 
   // #################################
@@ -1179,8 +1185,8 @@ function genCSV(
         })));
 
     const asRpSumByOrgParser = new Json2csvParser({ fields: fieldsAsRpSummaryByOrg });
-    createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `csv/as-rp-summary-by-org/${asMktName}.csv`, outputDirPath);
-    console.log(`${asMktName}.csv created at ${join(outputDirPath, 'csv/as-rp-summary-by-org')}`);
+    createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `csv/${asMktName}/as-rp-summary-by-org/${asMktName}.csv`, outputDirPath);
+    console.log(`${asMktName}.csv created at ${join(outputDirPath, 'csv', asMktName, 'as-rp-summary-by-org')}`);
   });
 
   // #################################
