@@ -7,7 +7,6 @@ const _ = require('lodash');
 const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
-const { financialNumberFormat } = require('./utils/csvUtil');
 const { genSummaryByOrgReport } = require('./genSummaryByOrgReport');
 
 const NDID_PRICE_PER_REQ = 5;
@@ -509,29 +508,6 @@ const fieldsRpNdidSummaryByOrg = [
     stringify: false,
   },
 ];
-const fieldsSummaryByOrg = [
-  {
-    label: 'RP',
-    value: row => financialNumberFormat(row.rp),
-    stringify: false,
-  }, {
-    label: 'IdP',
-    value: row => row.idp.toFixed(2),
-    stringify: false,
-  }, {
-    label: 'AS',
-    value: row => row.as.toFixed(2),
-    stringify: false,
-  }, {
-    label: 'NDID',
-    value: row => financialNumberFormat(row.ndid),
-    stringify: false,
-  }, {
-    label: 'Total',
-    value: row => financialNumberFormat(row.total),
-    stringify: false,
-  },
-];
 
 const pendingParser = new Json2csvParser({ fields: fieldsPending });
 
@@ -545,7 +521,6 @@ const rpNdidParser = new Json2csvParser({ fields: fieldsRpNdid });
 const rpNdidSumParser = new Json2csvParser({ fields: fieldsRpNdidSummary });
 const rpNdidSumByOrgParser = new Json2csvParser({ fields: fieldsRpNdidSummaryByOrg });
 
-const sumByOrgParser = new Json2csvParser({ fields: fieldsSummaryByOrg });
 
 function heightCompare(rowA, rowB) {
   return rowA.height - rowB.height;
@@ -567,7 +542,7 @@ function genRowsFromPendingRequest(req, nodeInfo) {
   const { detail, settlement } = req;
 
   const rows = (detail.data_request_list.length > 0 ? detail.data_request_list : [{}])
-    .map(({ as_id_list = [], service_id = '' }) => ({
+    .map(({ as_id_list: asIdList = [], service_id: serviceId = '' }) => ({
       rp_id: settlement.requester_node_id,
       rp_name: getNodeName(nodeInfo[settlement.requester_node_id]),
       request_id: settlement.request_id,
@@ -580,9 +555,9 @@ function genRowsFromPendingRequest(req, nodeInfo) {
       idp_names: getNodeNames(nodeInfo, detail.idp_id_list),
       min_ial: detail.min_ial,
       min_aal: detail.min_aal,
-      service_id,
-      as_ids: as_id_list.join(', '),
-      as_names: getNodeNames(nodeInfo, as_id_list),
+      service_id: serviceId,
+      as_ids: asIdList.join(', '),
+      as_names: getNodeNames(nodeInfo, asIdList),
     }));
 
   return rows;
@@ -825,7 +800,14 @@ function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
   createFile(sumCsv, path, outputDirPath);
 }
 
-function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategories, billPeriod, outputDirPath) {
+function genCSV(
+  settlementWithPrice,
+  pendingRequests,
+  nodeInfo,
+  allPriceCategories,
+  billPeriod,
+  outputDirPath,
+) {
   const allPendingReqIds = Object.keys(pendingRequests);
   const allPendingReqRows = allPendingReqIds
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
@@ -966,9 +948,9 @@ function genCSV(settlementWithPrice, pendingRequests, nodeInfo, allPriceCategori
           result[idpMktName] = { org: idpMktName };
         }
 
-        const { min_ial, min_aal } = curr;
+        const { min_ial: minIal, min_aal: minAal } = curr;
 
-        result[idpMktName][`${min_ial} ${min_aal}`] = (result[idpMktName][`${min_ial} ${min_aal}`] || 0) + curr.price;
+        result[idpMktName][`${minIal} ${minAal}`] = (result[idpMktName][`${minIal} ${minAal}`] || 0) + curr.price;
         return result;
       }, {});
     const rpIdpSumByOrgRows = Object.values(rpIdpSumByOrg);
