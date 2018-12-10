@@ -111,7 +111,7 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
   return tableTotalRowIndex;
 }
 
-function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, outputDirPath) {
+function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, outputCsvDirPath) {
   const workbook = new Excel.Workbook();
   workbook.creator = 'NDID';
   workbook.lastModifiedBy = 'NDID';
@@ -229,7 +229,7 @@ function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, output
   settleValueCell.value = billToSummary.total.netTotal - payToSummary.total.netTotal;
   settleValueCell.numFmt = MONEY_NUM_FMT;
 
-  const folderPath = path.join(outputDirPath, 'csv', memberName, 'summary-by-org');
+  const folderPath = path.join(outputCsvDirPath, memberName, 'summary-by-org');
   mkpath.sync(folderPath);
   const filePath = path.join(folderPath, `${memberName}.xlsx`);
   workbook.xlsx.writeFile(filePath)
@@ -238,7 +238,7 @@ function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, output
     });
 }
 
-function genSummaryByOrgReport(allRows, orgList, billPeriod, outputDirPath) {
+function genSummaryByOrgReport(allRows, orgList, billPeriod, outputCsvDirPath) {
   _
     .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
     .forEach((mktName) => {
@@ -353,8 +353,8 @@ function genSummaryByOrgReport(allRows, orgList, billPeriod, outputDirPath) {
           .flatten(billToSummary.members.map(member => member.items)).map(item => item.netTotal)),
       };
 
-      genXlsxFile(mktName, billPeriod, payToSummary, billToSummary, outputDirPath);
-      console.log(`${mktName}.xlsx created at ${path.join(outputDirPath, 'csv', mktName, 'summary-by-org')}`);
+      genXlsxFile(mktName, billPeriod, payToSummary, billToSummary, outputCsvDirPath);
+      console.log(`${mktName}.xlsx created at ${path.join(outputCsvDirPath, mktName, 'summary-by-org')}`);
     });
 }
 

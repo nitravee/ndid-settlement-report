@@ -210,14 +210,15 @@ importPriceListDirectories(pricesDirPath)
     });
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
 
+    const outputCsvDirPath = path.join(outputPath, 'csv');
     genCSV(
       settlementWithPrice,
       categorizedReqs.pendingRequests,
       nodeInfo, priceCategories,
       billPeriod,
-      outputPath,
+      outputCsvDirPath,
     );
-    console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
+    console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
 
     console.log('\nGenerating settlement reports succeeded.');
   });
