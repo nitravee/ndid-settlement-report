@@ -134,7 +134,12 @@ importPriceListDirectories(pricesDirPath)
       });
     }
 
-    const importedReqData = importBlockchainQueryData(usedTokenReportDirPath, requestDetailDirPath, minHeight, maxHeight);
+    const importedReqData = importBlockchainQueryData(
+      usedTokenReportDirPath,
+      requestDetailDirPath,
+      minHeight,
+      maxHeight,
+    );
     console.log('Importing blockchain query data succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(importedReqData, null, 2), (err) => {
@@ -204,8 +209,14 @@ importPriceListDirectories(pricesDirPath)
       }
     });
     console.log(`\npendingRequest.json have been created at ${outputPath}`);
-    
-    genCSV(settlementWithPrice, categorizedReqs.pendingRequests, nodeInfo, priceCategories, billPeriod, outputPath);
+
+    genCSV(
+      settlementWithPrice,
+      categorizedReqs.pendingRequests,
+      nodeInfo, priceCategories,
+      billPeriod,
+      outputPath,
+    );
     console.log(`\nSettlement report (.csv) files have been created at ${outputPath}/csv`);
 
     console.log('\nGenerating settlement reports succeeded.');
