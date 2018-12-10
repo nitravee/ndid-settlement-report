@@ -12,6 +12,7 @@ const { createSummaryReport } = require('./src/createSummaryReport');
 const { genCSV } = require('./src/genCSV');
 const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
+const { reportExecRoundDirName } = require('./src/utils/pathUtil');
 
 
 let minHeight;
@@ -20,7 +21,7 @@ let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport'
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
-let outputPath = path.resolve(__dirname, './reports');
+let argvOutputDirPath = path.resolve(__dirname, './reports');
 
 
 const currWorkingPath = process.cwd();
@@ -43,8 +44,10 @@ if (argv.p) {
   pricesDirPath = path.resolve(currWorkingPath, argv.p);
 }
 if (argv.o) {
-  outputPath = path.resolve(currWorkingPath, argv.o);
+  argvOutputDirPath = path.resolve(currWorkingPath, argv.o);
 }
+
+const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss').toDate();
 
 let billPeriod = null;
 const billPeriodStartStr = argv['bill-period-start'];
@@ -66,6 +69,20 @@ if (
 const enableDebugFile = argv['debug-file'];
 const nodeInfoJsonFilePath = argv['node-info-json'];
 
+let ver = 1;
+if (argv.version) {
+  ver = argv.version;
+}
+
+const execRoundDirName = reportExecRoundDirName(
+  billPeriod.start,
+  billPeriod.end,
+  minHeight,
+  maxHeight,
+  ver,
+  execDatetime,
+);
+const outputDirPath = path.join(argvOutputDirPath, execRoundDirName);
 
 console.log('Started generating settlement reports.');
 
@@ -76,7 +93,7 @@ console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
 console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
 console.log(`Prices Dir: ${pricesDirPath}`);
 console.log(`pendingRequests.json Path: ${prevPendingReqsPath}`);
-console.log(`Output Dir: ${outputPath}`);
+console.log(`Output Dir: ${outputDirPath}`);
 
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
@@ -84,20 +101,17 @@ console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.st
 console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
 
 
-const debugFileDirPath = path.resolve(outputPath, './debug');
+const debugFileDirPath = path.resolve(outputDirPath, './debug');
 if (enableDebugFile) {
   mkpath.sync(debugFileDirPath);
 } else {
-  mkpath.sync(outputPath);
+  mkpath.sync(outputDirPath);
 }
-
-const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss')
-  .format('D-MMM-YYYY HH:mm:ss');
 
 // Generate report info file
 fs.writeFile(
-  path.join(outputPath, './info.txt'),
-  `Execution datetime: ${execDatetime} 
+  path.join(outputDirPath, './info.txt'),
+  `Execution datetime: ${moment(execDatetime).format('D-MMM-YYYY HH:mm:ss')} 
   Min block height: ${minHeight}
   Max block height: ${maxHeight}`,
   (err) => {
@@ -203,18 +217,19 @@ importPriceListDirectories(pricesDirPath)
     }
 
     // Generate pending requests JSON file
-    fs.writeFile(path.join(outputPath, './pendingRequests.json'), JSON.stringify(categorizedReqs.pendingRequests, null, 2), (err) => {
+    fs.writeFile(path.join(outputDirPath, './pendingRequests.json'), JSON.stringify(categorizedReqs.pendingRequests, null, 2), (err) => {
       if (err) {
         throw err;
       }
     });
-    console.log(`\npendingRequest.json have been created at ${outputPath}`);
+    console.log(`\npendingRequest.json have been created at ${outputDirPath}`);
 
-    const outputCsvDirPath = path.join(outputPath, 'csv');
+    const outputCsvDirPath = path.join(outputDirPath, 'csv');
     genCSV(
       settlementWithPrice,
       categorizedReqs.pendingRequests,
-      nodeInfo, priceCategories,
+      nodeInfo,
+      priceCategories,
       billPeriod,
       outputCsvDirPath,
     );
