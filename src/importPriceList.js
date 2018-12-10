@@ -7,10 +7,16 @@ const isDirectory = source => fs.lstatSync(source).isDirectory();
 const getDirectories = source =>
   fs.readdirSync(source).map(name => join(source, name)).filter(isDirectory);
 
-async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asPricePath, orgToNodeIdMapPath) {
+async function importPriceList(
+  minBlockHeight,
+  maxBlockHeight,
+  idpPricePath,
+  asPricePath,
+  orgToNodeIdMapPath,
+) {
   if (!idpPricePath || !asPricePath || !orgToNodeIdMapPath) {
     console.error('Import price list failed. Missing parameter(s).');
-    return;
+    return undefined;
   }
 
   const idpJsonArray = await csv().fromFile(idpPricePath);
@@ -20,7 +26,7 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
 
   if (!idpJsonArray || !idpJsonArray || !mapping) {
     console.error('Import price list failed. Import file(s) failed.');
-    return;
+    return undefined;
   }
 
   const prices = {
@@ -30,45 +36,40 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
 
   for (const row of idpJsonArray) {
     const orgNames = Object.keys(row).slice(2);
-    const aal = row['aal'];
-    const ial = row['ial'];
-    
+    const { aal, ial } = row;
+
     for (const name of orgNames) {
-      const idpNodeIds = mapping[name]['idp'];
-      if (!idpNodeIds || idpNodeIds.length === 0) {
-        continue;
-      } 
+      const { idp: idpNodeIds } = mapping[name];
+      if (idpNodeIds && idpNodeIds.length > 0) {
+        for (const nodeId of idpNodeIds) {
+          if (!prices.idp[nodeId]) {
+            prices.idp[nodeId] = {};
+          }
 
-      for (const nodeId of idpNodeIds) {
-        if (!prices['idp'][nodeId]) {
-          prices['idp'][nodeId] = {};
+          if (!prices.idp[nodeId][aal]) {
+            prices.idp[nodeId][aal] = {};
+          }
+
+          prices.idp[nodeId][aal][ial] = parseFloat(row[name]);
         }
-
-        if (!prices['idp'][nodeId][aal]) {
-          prices['idp'][nodeId][aal] = {};
-        }
-
-        prices['idp'][nodeId][aal][ial] = parseFloat(row[name]);
       }
     }
   }
 
   for (const row of asJsonArray) {
     const orgNames = Object.keys(row).slice(1);
-    const data = row['Data'];
+    const { Data: data } = row;
 
     for (const name of orgNames) {
-      const asNodeIds = mapping[name]['as'];
-      if (!asNodeIds || asNodeIds.length === 0) {
-        continue;
-      } 
+      const { as: asNodeIds } = mapping[name];
+      if (asNodeIds && asNodeIds.length > 0) {
+        for (const nodeId of asNodeIds) {
+          if (!prices.as[nodeId]) {
+            prices.as[nodeId] = {};
+          }
 
-      for (const nodeId of asNodeIds) {
-        if (!prices['as'][nodeId]) {
-          prices['as'][nodeId] = {};
+          prices.as[nodeId][data] = parseFloat(row[name]);
         }
-
-        prices['as'][nodeId][data] = parseFloat(row[name]);
       }
     }
   }
@@ -85,7 +86,7 @@ async function importPriceList(minBlockHeight, maxBlockHeight, idpPricePath, asP
 async function importPriceListDirectories(rootDirPath) {
   if (!rootDirPath) {
     console.error('Root directory path must be specific.');
-    return;
+    return undefined;
   }
 
   const dirPaths = getDirectories(rootDirPath);
@@ -97,7 +98,7 @@ async function importPriceListDirectories(rootDirPath) {
   for (let i = 0; i < minHeights.length; i++) {
     const minHeight = minHeights[i];
     const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
-    const dirPath = join(rootDirPath, minHeight + '');
+    const dirPath = join(rootDirPath, minHeight.toString());
 
     const prices = await importPriceList(
       minHeight,
