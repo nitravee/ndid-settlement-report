@@ -113,7 +113,7 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
   return tableTotalRowIndex;
 }
 
-function genXlsxFile(
+async function genXlsxFile(
   memberName,
   billPeriod,
   blockRange,
@@ -251,14 +251,15 @@ function genXlsxFile(
     extension: 'xlsx',
   });
   const filePath = path.join(folderPath, fileNameWithExt);
-  workbook.xlsx.writeFile(filePath)
-    .catch((err) => {
-      console.error(`ERROR: Failed to write csv/${memberName}/summary-by-org/${memberName}.xlsx.`, err);
-    });
-  logFileCreated(fileNameWithExt, folderPath);
+  try {
+    await workbook.xlsx.writeFile(filePath);
+    logFileCreated(fileNameWithExt, folderPath);
+  } catch (err) {
+    console.error(`ERROR: Failed to write csv/${memberName}/summary-by-org/${memberName}.xlsx.`, err);
+  }
 }
 
-function genSummaryByOrgReport(
+async function genSummaryByOrgReport(
   allRows,
   orgList,
   billPeriod,
@@ -266,130 +267,129 @@ function genSummaryByOrgReport(
   version,
   outputCsvDirPath,
 ) {
-  _
-    .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
-    .forEach((mktName) => {
-      // Pay To
-      const rpIdpRows = _.groupBy(
-        allRows.rpIdp.filter(row =>
-          row.rp_name_obj.marketing_name_en === mktName),
-        row => row.idp_name_obj.marketing_name_en,
-      );
-      const rpAsRows = _.groupBy(
-        allRows.rpAs.filter(row =>
-          row.rp_name_obj.marketing_name_en === mktName),
-        row => row.as_name_obj.marketing_name_en,
-      );
-      const ndidRows = allRows.rpNdid.filter(row =>
-        row.rp_name_obj.marketing_name_en === mktName);
+  const orgMktNames = _.uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList]);
+  for (const mktName of orgMktNames) {
+    // Pay To
+    const rpIdpRows = _.groupBy(
+      allRows.rpIdp.filter(row =>
+        row.rp_name_obj.marketing_name_en === mktName),
+      row => row.idp_name_obj.marketing_name_en,
+    );
+    const rpAsRows = _.groupBy(
+      allRows.rpAs.filter(row =>
+        row.rp_name_obj.marketing_name_en === mktName),
+      row => row.as_name_obj.marketing_name_en,
+    );
+    const ndidRows = allRows.rpNdid.filter(row =>
+      row.rp_name_obj.marketing_name_en === mktName);
 
-      const payToMktNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
-      const payToSummary = {
-        members: [
-          {
-            memberName: 'NDID',
-            items: [{
-              description: 'NDID Fee',
-              ...calculateTableItemSummaryInfo(ndidRows),
-            }],
-          },
-          ...payToMktNames
-            .map((payeeName) => {
-              const items = [];
-              if (rpIdpRows[payeeName]) {
-                items.push({
-                  description: `${payeeName} IdP`,
-                  ...calculateTableItemSummaryInfo(rpIdpRows[payeeName]),
-                });
-              }
-
-              if (rpAsRows[payeeName]) {
-                items.push({
-                  description: `${payeeName} AS`,
-                  ...calculateTableItemSummaryInfo(rpAsRows[payeeName]),
-                });
-              }
-
-              return {
-                memberName: payeeName,
-                items,
-              };
-            }),
-        ],
-      };
-      payToSummary.total = {
-        unit: _.sumBy(_
-          .flatten(payToSummary.members.map(member => member.items)).map(item => item.unit)),
-        total: _.sumBy(_
-          .flatten(payToSummary.members.map(member => member.items)).map(item => item.total)),
-        vat: _.sumBy(_
-          .flatten(payToSummary.members.map(member => member.items)).map(item => item.vat)),
-        wht: _.sumBy(_
-          .flatten(payToSummary.members.map(member => member.items)).map(item => item.wht)),
-        netTotal: _.sumBy(_
-          .flatten(payToSummary.members.map(member => member.items)).map(item => item.netTotal)),
-      };
-
-      // Bill To
-      const idpRpRows = _.groupBy(
-        allRows.rpIdp.filter(row =>
-          row.idp_name_obj.marketing_name_en === mktName),
-        row => row.rp_name_obj.marketing_name_en,
-      );
-      const asRpRows = _.groupBy(
-        allRows.rpAs.filter(row =>
-          row.as_name_obj.marketing_name_en === mktName),
-        row => row.rp_name_obj.marketing_name_en,
-      );
-
-      const billToMktNames = _.uniq([...Object.keys(idpRpRows), ...Object.keys(asRpRows)]);
-      const billToSummary = {
-        members: billToMktNames
-          .map((payerName) => {
+    const payToMktNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
+    const payToSummary = {
+      members: [
+        {
+          memberName: 'NDID',
+          items: [{
+            description: 'NDID Fee',
+            ...calculateTableItemSummaryInfo(ndidRows),
+          }],
+        },
+        ...payToMktNames
+          .map((payeeName) => {
             const items = [];
-            if (idpRpRows[payerName]) {
+            if (rpIdpRows[payeeName]) {
               items.push({
-                description: `${mktName} IdP`,
-                ...calculateTableItemSummaryInfo(idpRpRows[payerName]),
+                description: `${payeeName} IdP`,
+                ...calculateTableItemSummaryInfo(rpIdpRows[payeeName]),
               });
             }
 
-            if (asRpRows[payerName]) {
+            if (rpAsRows[payeeName]) {
               items.push({
-                description: `${mktName} AS`,
-                ...calculateTableItemSummaryInfo(asRpRows[payerName]),
+                description: `${payeeName} AS`,
+                ...calculateTableItemSummaryInfo(rpAsRows[payeeName]),
               });
             }
 
             return {
-              memberName: payerName,
+              memberName: payeeName,
               items,
             };
           }),
-      };
-      billToSummary.total = {
-        unit: _.sumBy(_
-          .flatten(billToSummary.members.map(member => member.items)).map(item => item.unit)),
-        total: _.sumBy(_
-          .flatten(billToSummary.members.map(member => member.items)).map(item => item.total)),
-        vat: _.sumBy(_
-          .flatten(billToSummary.members.map(member => member.items)).map(item => item.vat)),
-        wht: _.sumBy(_
-          .flatten(billToSummary.members.map(member => member.items)).map(item => item.wht)),
-        netTotal: _.sumBy(_
-          .flatten(billToSummary.members.map(member => member.items)).map(item => item.netTotal)),
-      };
+      ],
+    };
+    payToSummary.total = {
+      unit: _.sumBy(_
+        .flatten(payToSummary.members.map(member => member.items)).map(item => item.unit)),
+      total: _.sumBy(_
+        .flatten(payToSummary.members.map(member => member.items)).map(item => item.total)),
+      vat: _.sumBy(_
+        .flatten(payToSummary.members.map(member => member.items)).map(item => item.vat)),
+      wht: _.sumBy(_
+        .flatten(payToSummary.members.map(member => member.items)).map(item => item.wht)),
+      netTotal: _.sumBy(_
+        .flatten(payToSummary.members.map(member => member.items)).map(item => item.netTotal)),
+    };
 
-      genXlsxFile(
-        mktName,
-        billPeriod,
-        blockRange,
-        version,
-        payToSummary,
-        billToSummary,
-        outputCsvDirPath,
-      );
-    });
+    // Bill To
+    const idpRpRows = _.groupBy(
+      allRows.rpIdp.filter(row =>
+        row.idp_name_obj.marketing_name_en === mktName),
+      row => row.rp_name_obj.marketing_name_en,
+    );
+    const asRpRows = _.groupBy(
+      allRows.rpAs.filter(row =>
+        row.as_name_obj.marketing_name_en === mktName),
+      row => row.rp_name_obj.marketing_name_en,
+    );
+
+    const billToMktNames = _.uniq([...Object.keys(idpRpRows), ...Object.keys(asRpRows)]);
+    const billToSummary = {
+      members: billToMktNames
+        .map((payerName) => {
+          const items = [];
+          if (idpRpRows[payerName]) {
+            items.push({
+              description: `${mktName} IdP`,
+              ...calculateTableItemSummaryInfo(idpRpRows[payerName]),
+            });
+          }
+
+          if (asRpRows[payerName]) {
+            items.push({
+              description: `${mktName} AS`,
+              ...calculateTableItemSummaryInfo(asRpRows[payerName]),
+            });
+          }
+
+          return {
+            memberName: payerName,
+            items,
+          };
+        }),
+    };
+    billToSummary.total = {
+      unit: _.sumBy(_
+        .flatten(billToSummary.members.map(member => member.items)).map(item => item.unit)),
+      total: _.sumBy(_
+        .flatten(billToSummary.members.map(member => member.items)).map(item => item.total)),
+      vat: _.sumBy(_
+        .flatten(billToSummary.members.map(member => member.items)).map(item => item.vat)),
+      wht: _.sumBy(_
+        .flatten(billToSummary.members.map(member => member.items)).map(item => item.wht)),
+      netTotal: _.sumBy(_
+        .flatten(billToSummary.members.map(member => member.items)).map(item => item.netTotal)),
+    };
+
+    await genXlsxFile(
+      mktName,
+      billPeriod,
+      blockRange,
+      version,
+      payToSummary,
+      billToSummary,
+      outputCsvDirPath,
+    );
+  }
 }
 
 module.exports = { genSummaryByOrgReport };

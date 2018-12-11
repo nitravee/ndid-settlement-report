@@ -366,7 +366,7 @@ function genSummaryRpNdid(
   logFileCreated(fileNameWithExt, destDirPath);
 }
 
-function genCSV(
+async function genCSV(
   settlementWithPrice,
   pendingRequests,
   nodeInfo,
@@ -888,7 +888,7 @@ function genCSV(
   // #################################
   // Summary by Org
   // #################################
-  genSummaryByOrgReport(allRows, orgList, billPeriod, blockRange, version, outputCsvDirPath);
+  await genSummaryByOrgReport(allRows, orgList, billPeriod, blockRange, version, outputCsvDirPath);
 }
 
 module.exports.genCSV = genCSV;

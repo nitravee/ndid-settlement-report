@@ -225,7 +225,7 @@ importPriceListDirectories(pricesDirPath)
     console.log(`\npendingRequest.json have been created at ${outputDirPath}`);
 
     const outputCsvDirPath = path.join(outputDirPath, 'csv');
-    genCSV(
+    await genCSV(
       settlementWithPrice,
       categorizedReqs.pendingRequests,
       nodeInfo,
