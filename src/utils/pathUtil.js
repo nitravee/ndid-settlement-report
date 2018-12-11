@@ -5,14 +5,14 @@ function formattedDatetime(date) {
   return moment(date).format('YYYYMMDDHHmmss');
 }
 
-function reportExecRoundDirName(
+function reportExecRoundDirName({
   billPeriodStart,
   billPeriodEnd,
   minBlockHeight,
   maxBlockHeight,
   version,
   execDatetime,
-) {
+}) {
   const billStartStr = formattedDatetime(billPeriodStart);
   const billEndStr = formattedDatetime(billPeriodEnd);
   const execDatetimeStr = formattedDatetime(execDatetime);
@@ -20,7 +20,7 @@ function reportExecRoundDirName(
   return `${billStartStr}_${billEndStr}_${minBlockHeight}_${maxBlockHeight}_${version}_${execDatetimeStr}`;
 }
 
-function reportFileName(
+function reportFileName({
   billPeriodStart,
   billPeriodEnd,
   minBlockHeight,
@@ -28,11 +28,14 @@ function reportFileName(
   version,
   reportIdentifier,
   rowCount,
-) {
+  extension,
+}) {
   const billStartStr = formattedDatetime(billPeriodStart);
   const billEndStr = formattedDatetime(billPeriodEnd);
 
-  return `${billStartStr}_${billEndStr}_${minBlockHeight}_${maxBlockHeight}_${version}_${reportIdentifier}${rowCount == null ? '' : `_${rowCount}`}`;
+  return `${billStartStr}_${billEndStr}_${minBlockHeight}_${maxBlockHeight}_${version}_${reportIdentifier}\
+${rowCount != null ? `_${rowCount}` : ''}\
+${extension ? `.${extension}` : ''}`;
 }
 
 module.exports = {

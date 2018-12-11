@@ -74,14 +74,14 @@ if (argv.version) {
   ver = argv.version;
 }
 
-const execRoundDirName = reportExecRoundDirName(
-  billPeriod.start,
-  billPeriod.end,
-  minHeight,
-  maxHeight,
-  ver,
+const execRoundDirName = reportExecRoundDirName({
+  billPeriodStart: billPeriod.start,
+  billPeriodEnd: billPeriod.end,
+  minBlockHeight: minHeight,
+  maxBlockHeight: maxHeight,
+  version: ver,
   execDatetime,
-);
+});
 const outputDirPath = path.join(argvOutputDirPath, execRoundDirName);
 
 console.log('Started generating settlement reports.');
@@ -231,6 +231,8 @@ importPriceListDirectories(pricesDirPath)
       nodeInfo,
       priceCategories,
       billPeriod,
+      { min: minHeight, max: maxHeight },
+      ver,
       outputCsvDirPath,
     );
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);

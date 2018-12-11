@@ -8,6 +8,7 @@ const mkpath = require('mkpath');
 const { join } = require('path');
 const Json2csvParser = require('json2csv').Parser;
 const { genSummaryByOrgReport } = require('./genSummaryByOrgReport');
+const { reportFileName } = require('./utils/pathUtil');
 const {
   pendingParser,
   rpIdpParser,
@@ -18,6 +19,8 @@ const {
   rpNdidSumParser,
   rpNdidSumByOrgParser,
 } = require('./csvParsers');
+const { logFileCreated } = require('./utils/logUtil');
+
 
 const NDID_PRICE_PER_REQ = 5;
 
@@ -233,7 +236,17 @@ function createFile(csv, filePathInOutputDir, outputDirPath) {
   });
 }
 
-function genSummaryRpIdp(path, requests, nodeIdList, checkRp, nodeInfo, outputDirPath) {
+function genSummaryRpIdp(
+  nodeId,
+  requests,
+  nodeIdList,
+  checkRp,
+  nodeInfo,
+  billPeriod,
+  blockRange,
+  version,
+  destDirPath,
+) {
   const summary = [];
   nodeIdList.forEach((id) => {
     const filteredReqs = requests.filter(item =>
@@ -253,10 +266,31 @@ function genSummaryRpIdp(path, requests, nodeIdList, checkRp, nodeInfo, outputDi
     summary.push(sum);
   });
   const sumCsv = rpIdpSumParser.parse(summary);
-  createFile(sumCsv, path, outputDirPath);
+  const fileNameWithExt = reportFileName({
+    billPeriodStart: billPeriod.start,
+    billPeriodEnd: billPeriod.end,
+    minBlockHeight: blockRange.min,
+    maxBlockHeight: blockRange.max,
+    version,
+    reportIdentifier: nodeId,
+    rowCount: summary.length,
+    extension: 'csv',
+  });
+  createFile(sumCsv, fileNameWithExt, destDirPath);
+  logFileCreated(fileNameWithExt, destDirPath);
 }
 
-function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, outputDirPath) {
+function genSummaryRpAs(
+  nodeId,
+  requests,
+  checkDataList,
+  checkRp,
+  nodeInfo,
+  billPeriod,
+  blockRange,
+  version,
+  destDirPath,
+) {
   const summary = [];
   checkDataList.forEach((checkData) => {
     const filteredReqs = requests.filter((item) => {
@@ -281,10 +315,29 @@ function genSummaryRpAs(path, requests, checkDataList, checkRp, nodeInfo, output
     summary.push(sumRpAs);
   });
   const sumCsv = rpAsSumParser.parse(summary);
-  createFile(sumCsv, path, outputDirPath);
+  const fileNameWithExt = reportFileName({
+    billPeriodStart: billPeriod.start,
+    billPeriodEnd: billPeriod.end,
+    minBlockHeight: blockRange.min,
+    maxBlockHeight: blockRange.max,
+    version,
+    reportIdentifier: nodeId,
+    rowCount: summary.length,
+    extension: 'csv',
+  });
+  createFile(sumCsv, fileNameWithExt, destDirPath);
+  logFileCreated(fileNameWithExt, destDirPath);
 }
 
-function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
+function genSummaryRpNdid(
+  requests,
+  rpId,
+  nodeInfo,
+  billPeriod,
+  blockRange,
+  version,
+  destDirPath,
+) {
   const rpReqs = requests.filter(req => req.rp_id === rpId);
   const row = rpReqs
     .reduce((prev, curr) => ({
@@ -299,7 +352,18 @@ function genSummaryRpNdid(path, requests, rpId, nodeInfo, outputDirPath) {
   row.numberOfTxns = rpReqs.length;
 
   const sumCsv = rpNdidSumParser.parse([row]);
-  createFile(sumCsv, path, outputDirPath);
+  const fileNameWithExt = reportFileName({
+    billPeriodStart: billPeriod.start,
+    billPeriodEnd: billPeriod.end,
+    minBlockHeight: blockRange.min,
+    maxBlockHeight: blockRange.max,
+    version,
+    reportIdentifier: rpId,
+    rowCount: 1,
+    extension: 'csv',
+  });
+  createFile(sumCsv, fileNameWithExt, destDirPath);
+  logFileCreated(fileNameWithExt, destDirPath);
 }
 
 function genCSV(
@@ -308,14 +372,24 @@ function genCSV(
   nodeInfo,
   allPriceCategories,
   billPeriod,
+  blockRange,
+  version,
   outputCsvDirPath,
 ) {
+  const reportFileNameFnBaseArg = {
+    billPeriodStart: billPeriod.start,
+    billPeriodEnd: billPeriod.end,
+    minBlockHeight: blockRange.min,
+    maxBlockHeight: blockRange.max,
+    version,
+  };
+
   const allPendingReqIds = Object.keys(pendingRequests);
   const allPendingReqRows = allPendingReqIds
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
     .reduce((prev, curr) => prev.concat(curr), []);
   createFile(pendingParser.parse(allPendingReqRows.sort(heightCompare)), 'pending.csv', outputCsvDirPath);
-  console.log(`pending.csv created at ${outputCsvDirPath}`);
+  logFileCreated('pending.csv', outputCsvDirPath);
 
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
@@ -342,8 +416,15 @@ function genCSV(
       }
     });
     const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
-    createFile(csv, `${marketingNameEn}/rp-idp/${id}.csv`, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-idp')}`);
+    const rpIdpFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: rpIdp.length, extension: 'csv',
+    });
+    createFile(
+      csv,
+      rpIdpFileNameWithExt,
+      join(outputCsvDirPath, marketingNameEn, 'rp-idp'),
+    );
+    logFileCreated(rpIdpFileNameWithExt, join(outputCsvDirPath, marketingNameEn, 'rp-idp'));
 
     const idpList = [];
     rpIdp.forEach((item) => {
@@ -351,16 +432,41 @@ function genCSV(
         idpList.push(item.idp_id);
       }
     });
-    genSummaryRpIdp(`${marketingNameEn}/rp-idp-summary/${id}.csv`, rpIdp, idpList, false, nodeInfo, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-idp-summary')}`);
+    genSummaryRpIdp(
+      id,
+      rpIdp,
+      idpList,
+      false,
+      nodeInfo,
+      billPeriod,
+      blockRange,
+      version,
+      join(outputCsvDirPath, marketingNameEn, 'rp-idp-summary'),
+    );
 
-    const rpNdidCsv = rpNdidParser
-      .parse(allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare));
-    createFile(rpNdidCsv, `${marketingNameEn}/rp-ndid/${id}.csv`, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-ndid')}`);
+    const rpNdid = allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare);
+    const rpNdidCsv = rpNdidParser.parse(rpNdid);
+    const rpNdidFileNameWithExt = reportFileName(Object.assign(
+      {},
+      reportFileNameFnBaseArg,
+      { reportIdentifier: id, rowCount: rpNdid.length, extension: 'csv' },
+    ));
+    createFile(
+      rpNdidCsv,
+      rpNdidFileNameWithExt,
+      join(outputCsvDirPath, marketingNameEn, 'rp-ndid'),
+    );
+    logFileCreated(rpNdidFileNameWithExt, join(outputCsvDirPath, marketingNameEn, 'rp-ndid'));
 
-    genSummaryRpNdid(`${marketingNameEn}/rp-ndid-summary/${id}.csv`, allRows.rpNdid, id, nodeInfo, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-ndid-summary')}`);
+    genSummaryRpNdid(
+      allRows.rpNdid,
+      id,
+      nodeInfo,
+      billPeriod,
+      blockRange,
+      version,
+      join(outputCsvDirPath, marketingNameEn, 'rp-ndid-summary/'),
+    );
   });
 
   orgList.rpList.forEach((rpMktName) => {
@@ -433,8 +539,15 @@ function genCSV(
 
     const rpSumByOrgParser = new Json2csvParser({ fields: fieldsRpSummaryByOrg });
     const csv = rpSumByOrgParser.parse([idpRow, asRow, totalRow]);
-    createFile(csv, `${rpMktName}/rp-summary-by-org/${rpMktName}.csv`, outputCsvDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputCsvDirPath, rpMktName, 'rp-summary-by-org')}`);
+    const rpSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: fieldsRpSummaryByOrg.length - 1, extension: 'csv',
+    });
+    createFile(
+      csv,
+      rpSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, rpMktName, 'rp-summary-by-org'),
+    );
+    logFileCreated(rpSumByOrgFileNameWithExt, join(outputCsvDirPath, rpMktName, 'rp-summary-by-org'));
 
     // #################################
     // RP-IdP Summary by Org
@@ -474,8 +587,15 @@ function genCSV(
         })));
 
     const rpIdpSumByOrgParser = new Json2csvParser({ fields: fieldsRpIdpSummaryByOrg });
-    createFile(rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows), `${rpMktName}/rp-idp-summary-by-org/${rpMktName}.csv`, outputCsvDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputCsvDirPath, rpMktName, 'rp-idp-summary-by-org')}`);
+    const rpIdpSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: rpIdpSumByOrgRows.length, extension: 'csv',
+    });
+    createFile(
+      rpIdpSumByOrgParser.parse(rpIdpSumByOrgRows),
+      rpIdpSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, rpMktName, 'rp-idp-summary-by-org'),
+    );
+    logFileCreated(rpIdpSumByOrgFileNameWithExt, join(outputCsvDirPath, rpMktName, 'rp-idp-summary-by-org'));
 
     // #################################
     // RP-AS Summary by Org
@@ -513,8 +633,15 @@ function genCSV(
         })));
 
     const rpAsSumByOrgParser = new Json2csvParser({ fields: fieldsRpAsSummaryByOrg });
-    createFile(rpAsSumByOrgParser.parse(rpAsSumByOrgRows), `${rpMktName}/rp-as-summary-by-org/${rpMktName}.csv`, outputCsvDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputCsvDirPath, rpMktName, 'rp-as-summary-by-org')}`);
+    const rpAsSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: rpAsSumByOrgRows.length, extension: 'csv',
+    });
+    createFile(
+      rpAsSumByOrgParser.parse(rpAsSumByOrgRows),
+      rpAsSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, rpMktName, 'rp-as-summary-by-org'),
+    );
+    logFileCreated(rpAsSumByOrgFileNameWithExt, join(outputCsvDirPath, rpMktName, 'rp-as-summary-by-org'));
 
     // #################################
     // RP-NDID Summary by Org
@@ -526,8 +653,15 @@ function genCSV(
       numberOfTxns: rpNdidRows.length,
       ndidPrice: _.sum(rpNdidRows.map(row => row.price)),
     }];
-    createFile(rpNdidSumByOrgParser.parse(rpNdidSumByOrg), `${rpMktName}/rp-ndid-summary-by-org/${rpMktName}.csv`, outputCsvDirPath);
-    console.log(`${rpMktName}.csv created at ${join(outputCsvDirPath, rpMktName, 'rp-ndid-summary-by-org')}`);
+    const rpNdidSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: rpNdidSumByOrg.length, extension: 'csv',
+    });
+    createFile(
+      rpNdidSumByOrgParser.parse(rpNdidSumByOrg),
+      rpNdidSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, rpMktName, 'rp-ndid-summary-by-org'),
+    );
+    logFileCreated(rpNdidSumByOrgFileNameWithExt, join(outputCsvDirPath, rpMktName, 'rp-ndid-summary-by-org'));
   });
 
   nodeList.idpList.forEach(({ id, org: { marketingNameEn } }) => {
@@ -538,8 +672,15 @@ function genCSV(
       }
     });
     const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
-    createFile(csv, `${marketingNameEn}/idp-rp/${id}.csv`, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'idp-rp')}`);
+    const idpRpFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: idpRp.length, extension: 'csv',
+    });
+    createFile(
+      csv,
+      idpRpFileNameWithExt,
+      join(outputCsvDirPath, marketingNameEn, 'idp-rp'),
+    );
+    logFileCreated(idpRpFileNameWithExt, join(outputCsvDirPath, marketingNameEn, 'idp-rp'));
 
     const rpList = [];
     idpRp.forEach((item) => {
@@ -547,8 +688,17 @@ function genCSV(
         rpList.push(item.rp_id);
       }
     });
-    genSummaryRpIdp(`${marketingNameEn}/idp-rp-summary/${id}.csv`, idpRp, rpList, true, nodeInfo, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'idp-rp-summary')}`);
+    genSummaryRpIdp(
+      id,
+      idpRp,
+      rpList,
+      true,
+      nodeInfo,
+      billPeriod,
+      blockRange,
+      version,
+      join(outputCsvDirPath, `${marketingNameEn}/idp-rp-summary/`),
+    );
   });
 
   // #################################
@@ -592,8 +742,15 @@ function genCSV(
         })));
 
     const idpRpSumByOrgParser = new Json2csvParser({ fields: fieldsIdpRpSummaryByOrg });
-    createFile(idpRpSumByOrgParser.parse(idpRpSumByOrgRows), `${idpMktName}/idp-rp-summary-by-org/${idpMktName}.csv`, outputCsvDirPath);
-    console.log(`${idpMktName}.csv created at ${join(outputCsvDirPath, idpMktName, 'idp-rp-summary-by-org')}`);
+    const idpRpSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: idpMktName, rowCount: idpRpSumByOrgRows.length, extension: 'csv',
+    });
+    createFile(
+      idpRpSumByOrgParser.parse(idpRpSumByOrgRows),
+      idpRpSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, idpMktName, 'idp-rp-summary-by-org'),
+    );
+    logFileCreated(idpRpSumByOrgFileNameWithExt, join(outputCsvDirPath, idpMktName, 'idp-rp-summary-by-org'));
   });
 
   nodeList.rpList.forEach(({ id, org: { marketingNameEn } }) => {
@@ -604,8 +761,15 @@ function genCSV(
       }
     });
     const csv = rpAsParser.parse(rpAs.sort(heightCompare));
-    createFile(csv, `${marketingNameEn}/rp-as/${id}.csv`, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-as')}`);
+    const rpAsFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: csv.length, extension: 'csv',
+    });
+    createFile(
+      csv,
+      rpAsFileNameWithExt,
+      join(outputCsvDirPath, marketingNameEn, 'rp-as'),
+    );
+    logFileCreated(rpAsFileNameWithExt, join(outputCsvDirPath, marketingNameEn, 'rp-as'));
 
     const asList = [];
     rpAs.forEach((item) => {
@@ -617,8 +781,17 @@ function genCSV(
         asList.push(as);
       }
     });
-    genSummaryRpAs(`${marketingNameEn}/rp-as-summary/${id}.csv`, rpAs, asList, false, nodeInfo, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'rp-as-summary')}`);
+    genSummaryRpAs(
+      id,
+      rpAs,
+      asList,
+      false,
+      nodeInfo,
+      billPeriod,
+      blockRange,
+      version,
+      join(outputCsvDirPath, marketingNameEn, 'rp-as-summary'),
+    );
   });
 
   nodeList.asList.forEach(({ id, org: { marketingNameEn } }) => {
@@ -629,8 +802,15 @@ function genCSV(
       }
     });
     const csv = rpAsParser.parse(asRp.sort(heightCompare));
-    createFile(csv, `${marketingNameEn}/as-rp/${id}.csv`, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'as-rp')}`);
+    const asRpFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: asRp.length, extension: 'csv',
+    });
+    createFile(
+      csv,
+      asRpFileNameWithExt,
+      join(outputCsvDirPath, marketingNameEn, 'as-rp'),
+    );
+    logFileCreated(asRpFileNameWithExt, join(outputCsvDirPath, marketingNameEn, 'as-rp'));
 
     const asList = [];
     asRp.forEach((item) => {
@@ -642,8 +822,17 @@ function genCSV(
         asList.push(as);
       }
     });
-    genSummaryRpAs(`${marketingNameEn}/as-rp-summary/${id}.csv`, asRp, asList, true, nodeInfo, outputCsvDirPath);
-    console.log(`${id}.csv created at ${join(outputCsvDirPath, marketingNameEn, 'as-rp-summary')}`);
+    genSummaryRpAs(
+      id,
+      asRp,
+      asList,
+      true,
+      nodeInfo,
+      billPeriod,
+      blockRange,
+      version,
+      join(outputCsvDirPath, marketingNameEn, 'as-rp-summary'),
+    );
   });
 
   // #################################
@@ -685,14 +874,21 @@ function genCSV(
         })));
 
     const asRpSumByOrgParser = new Json2csvParser({ fields: fieldsAsRpSummaryByOrg });
-    createFile(asRpSumByOrgParser.parse(asRpSumByOrgRows), `${asMktName}/as-rp-summary-by-org/${asMktName}.csv`, outputCsvDirPath);
-    console.log(`${asMktName}.csv created at ${join(outputCsvDirPath, asMktName, 'as-rp-summary-by-org')}`);
+    const asRpSumByOrgFileNameWithExt = reportFileName({
+      ...reportFileNameFnBaseArg, reportIdentifier: asMktName, rowCount: asRpSumByOrgRows.length, extension: 'csv',
+    });
+    createFile(
+      asRpSumByOrgParser.parse(asRpSumByOrgRows),
+      asRpSumByOrgFileNameWithExt,
+      join(outputCsvDirPath, asMktName, 'as-rp-summary-by-org'),
+    );
+    logFileCreated(asRpSumByOrgFileNameWithExt, join(outputCsvDirPath, asMktName, 'as-rp-summary-by-org'));
   });
 
   // #################################
   // Summary by Org
   // #################################
-  genSummaryByOrgReport(allRows, orgList, billPeriod, outputCsvDirPath);
+  genSummaryByOrgReport(allRows, orgList, billPeriod, blockRange, version, outputCsvDirPath);
 }
 
 module.exports.genCSV = genCSV;

@@ -4,6 +4,8 @@ const mkpath = require('mkpath');
 const Excel = require('exceljs');
 const moment = require('moment');
 const { setOuterBorder, setBorder, setSolidFill } = require('./utils/excelUtil');
+const { reportFileName } = require('./utils/pathUtil');
+const { logFileCreated } = require('./utils/logUtil');
 
 
 const DEFAULT_FONT = {
@@ -111,7 +113,15 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
   return tableTotalRowIndex;
 }
 
-function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, outputCsvDirPath) {
+function genXlsxFile(
+  memberName,
+  billPeriod,
+  blockRange,
+  version,
+  payToSummary,
+  billToSummary,
+  outputCsvDirPath,
+) {
   const workbook = new Excel.Workbook();
   workbook.creator = 'NDID';
   workbook.lastModifiedBy = 'NDID';
@@ -231,14 +241,31 @@ function genXlsxFile(memberName, billPeriod, payToSummary, billToSummary, output
 
   const folderPath = path.join(outputCsvDirPath, memberName, 'summary-by-org');
   mkpath.sync(folderPath);
-  const filePath = path.join(folderPath, `${memberName}.xlsx`);
+  const fileNameWithExt = reportFileName({
+    billPeriodStart: billPeriod.start,
+    billPeriodEnd: billPeriod.end,
+    minBlockHeight: blockRange.min,
+    maxBlockHeight: blockRange.max,
+    version,
+    reportIdentifier: memberName,
+    extension: 'xlsx',
+  });
+  const filePath = path.join(folderPath, fileNameWithExt);
   workbook.xlsx.writeFile(filePath)
     .catch((err) => {
       console.error(`ERROR: Failed to write csv/${memberName}/summary-by-org/${memberName}.xlsx.`, err);
     });
+  logFileCreated(fileNameWithExt, folderPath);
 }
 
-function genSummaryByOrgReport(allRows, orgList, billPeriod, outputCsvDirPath) {
+function genSummaryByOrgReport(
+  allRows,
+  orgList,
+  billPeriod,
+  blockRange,
+  version,
+  outputCsvDirPath,
+) {
   _
     .uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList])
     .forEach((mktName) => {
@@ -353,8 +380,15 @@ function genSummaryByOrgReport(allRows, orgList, billPeriod, outputCsvDirPath) {
           .flatten(billToSummary.members.map(member => member.items)).map(item => item.netTotal)),
       };
 
-      genXlsxFile(mktName, billPeriod, payToSummary, billToSummary, outputCsvDirPath);
-      console.log(`${mktName}.xlsx created at ${path.join(outputCsvDirPath, mktName, 'summary-by-org')}`);
+      genXlsxFile(
+        mktName,
+        billPeriod,
+        blockRange,
+        version,
+        payToSummary,
+        billToSummary,
+        outputCsvDirPath,
+      );
     });
 }
 
