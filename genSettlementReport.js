@@ -52,6 +52,8 @@ if (argv.w) {
   webPortalDirPath = path.resolve(currWorkingPath, argv.w);
 }
 
+const createLatestSymlink = argv['latest-symlink'];
+
 const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss').toDate();
 
 let billPeriod = null;
@@ -94,11 +96,15 @@ console.log('Started generating settlement reports.');
 if (nodeInfoJsonFilePath) {
   console.log(`nodeInfo.json Path: ${nodeInfoJsonFilePath}`);
 }
-console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath}`);
-console.log(`RequestDetail Dir: ${requestDetailDirPath}`);
-console.log(`Prices Dir: ${pricesDirPath}`);
-console.log(`pendingRequests.json Path: ${prevPendingReqsPath}`);
-console.log(`Output Dir: ${outputDirPath}`);
+console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath || 'Not specific'}`);
+console.log(`RequestDetail Dir: ${requestDetailDirPath || 'Not specific'}`);
+console.log(`Prices Dir: ${pricesDirPath || 'Not specific'}`);
+console.log(`pendingRequests.json Path: ${prevPendingReqsPath || 'Not specific'}`);
+console.log(`Output Dir: ${outputDirPath || 'Not specific'}`);
+console.log(`Web Portal Dir: ${webPortalDirPath || 'Not specific'}`);
+if (webPortalDirPath) {
+  console.log(`Create Latest Symlink: ${createLatestSymlink ? 'Yes' : 'No'}`);
+}
 
 console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
@@ -243,7 +249,7 @@ importPriceListDirectories(pricesDirPath)
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
 
     if (webPortalDirPath) {
-      copyReportsToWebPortalDir(outputDirPath, webPortalDirPath);
+      copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatestSymlink);
       console.log('Copying report files to web portal directory succeeded');
     } else {
       console.log('Copying report files to web portal directory skipped');

@@ -4,7 +4,7 @@ const fs = require('fs-extra');
 const { getDirectories } = require('./utils/pathUtil');
 
 
-function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath) {
+function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatestSymlink) {
   const csvDirPath = path.join(outputDirPath, 'csv');
   const orgDirPaths = getDirectories(csvDirPath);
 
@@ -25,6 +25,17 @@ function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath) {
       console.log(`${orgName} reports copied to ${destDirPath}`);
     } catch (err) {
       console.error(`ERROR: Failed to copy ${orgName} reports to ${destDirPath}`, err);
+    }
+
+    if (createLatestSymlink) {
+      const latestSymlinkPath = path.join(webPortalOrgDirPath, 'latest');
+      try {
+        fs.removeSync(latestSymlinkPath);
+        fs.ensureSymlinkSync(destDirPath, latestSymlinkPath);
+        console.log(`Symlink ${latestSymlinkPath} to ${destDirPath} created`);
+      } catch (err) {
+        console.error(`ERROR: Failed to create symlink ${latestSymlinkPath} to ${destDirPath}`, err);
+      }
     }
   });
 }
