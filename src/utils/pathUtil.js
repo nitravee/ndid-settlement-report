@@ -1,4 +1,6 @@
 const moment = require('moment');
+const path = require('path');
+const fs = require('fs');
 
 
 function formattedDatetime(date) {
@@ -38,7 +40,17 @@ ${rowCount != null ? `_${rowCount}` : ''}\
 ${extension ? `.${extension}` : ''}`;
 }
 
+function isDirectory(source) {
+  return fs.lstatSync(source).isDirectory();
+}
+
+function getDirectories(source) {
+  return fs.readdirSync(source).map(name => path.join(source, name)).filter(isDirectory);
+}
+
 module.exports = {
   reportExecRoundDirName,
   reportFileName,
+  isDirectory,
+  getDirectories,
 };

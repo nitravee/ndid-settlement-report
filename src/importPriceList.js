@@ -2,10 +2,8 @@ const csv = require('csvtojson');
 const fs = require('fs');
 const { join } = require('path');
 const _ = require('lodash');
+const { getDirectories } = require('./utils/pathUtil');
 
-const isDirectory = source => fs.lstatSync(source).isDirectory();
-const getDirectories = source =>
-  fs.readdirSync(source).map(name => join(source, name)).filter(isDirectory);
 
 async function importPriceList(
   minBlockHeight,

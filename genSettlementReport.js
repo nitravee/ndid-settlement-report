@@ -13,6 +13,7 @@ const { genCSV } = require('./src/genCSV');
 const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 const { reportExecRoundDirName } = require('./src/utils/pathUtil');
+const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir');
 
 
 let minHeight;
@@ -22,6 +23,7 @@ let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
 let argvOutputDirPath = path.resolve(__dirname, './reports');
+let webPortalDirPath;
 
 
 const currWorkingPath = process.cwd();
@@ -45,6 +47,9 @@ if (argv.p) {
 }
 if (argv.o) {
   argvOutputDirPath = path.resolve(currWorkingPath, argv.o);
+}
+if (argv.w) {
+  webPortalDirPath = path.resolve(currWorkingPath, argv.w);
 }
 
 const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss').toDate();
@@ -236,6 +241,13 @@ importPriceListDirectories(pricesDirPath)
       outputCsvDirPath,
     );
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
+
+    if (webPortalDirPath) {
+      copyReportsToWebPortalDir(outputDirPath, webPortalDirPath);
+      console.log('Copying report files to web portal directory succeeded');
+    } else {
+      console.log('Copying report files to web portal directory skipped');
+    }
 
     console.log('\nGenerating settlement reports succeeded.');
   });
