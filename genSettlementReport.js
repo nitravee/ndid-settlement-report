@@ -52,6 +52,9 @@ if (argv.w) {
   webPortalDirPath = path.resolve(currWorkingPath, argv.w);
 }
 
+const webPortalSubDirs = argv['portal-sub-dir']
+  ? argv['portal-sub-dir'].split('/').filter(str => str)
+  : [];
 const createLatestSymlink = argv['latest-symlink'];
 
 const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss').toDate();
@@ -249,7 +252,12 @@ importPriceListDirectories(pricesDirPath)
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
 
     if (webPortalDirPath) {
-      copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatestSymlink);
+      copyReportsToWebPortalDir(
+        outputDirPath,
+        webPortalDirPath,
+        webPortalSubDirs,
+        createLatestSymlink,
+      );
       console.log('Copying report files to web portal directory succeeded');
     } else {
       console.log('Copying report files to web portal directory skipped');

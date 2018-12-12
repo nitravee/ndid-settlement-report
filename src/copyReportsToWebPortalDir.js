@@ -4,7 +4,12 @@ const fs = require('fs-extra');
 const { getDirectories } = require('./utils/pathUtil');
 
 
-function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatestSymlink) {
+function copyReportsToWebPortalDir(
+  outputDirPath,
+  webPortalDirPath,
+  subDirs = [],
+  createLatestSymlink,
+) {
   const csvDirPath = path.join(outputDirPath, 'csv');
   const orgDirPaths = getDirectories(csvDirPath);
 
@@ -17,7 +22,7 @@ function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatest
     mkpath.sync(webPortalOrgDirPath);
 
     const execRoundDirName = outputDirPath.substr(outputDirPath.lastIndexOf('/') + 1);
-    const destDirPath = path.join(webPortalOrgDirPath, execRoundDirName);
+    const destDirPath = path.join(webPortalOrgDirPath, ...subDirs, execRoundDirName);
     try {
       fs.copySync(infoPath, path.join(destDirPath, 'info.txt'));
       fs.copySync(pendingCsvPath, path.join(destDirPath, 'pending.csv'));
@@ -28,7 +33,7 @@ function copyReportsToWebPortalDir(outputDirPath, webPortalDirPath, createLatest
     }
 
     if (createLatestSymlink) {
-      const latestSymlinkPath = path.join(webPortalOrgDirPath, 'latest');
+      const latestSymlinkPath = path.join(webPortalOrgDirPath, ...subDirs, 'latest');
       try {
         fs.removeSync(latestSymlinkPath);
         fs.ensureSymlinkSync(destDirPath, latestSymlinkPath);
