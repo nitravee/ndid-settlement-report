@@ -14,8 +14,10 @@ const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 const { reportExecRoundDirName } = require('./src/utils/pathUtil');
 const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir');
+const { writeNextRoundInfoJson } = require('./src/writeNextRoundInfoJson');
 
 
+let chainId;
 let minHeight;
 let maxHeight;
 let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport');
@@ -27,6 +29,9 @@ let webPortalDirPath;
 
 
 const currWorkingPath = process.cwd();
+if (argv.c) {
+  chainId = argv.c;
+}
 if (argv.b) {
   minHeight = parseInt(argv.b, 10);
 }
@@ -94,6 +99,8 @@ const execRoundDirName = reportExecRoundDirName({
 });
 const outputDirPath = path.join(argvOutputDirPath, execRoundDirName);
 
+const nextRoundInfoPath = argv['next-round-json'] && path.resolve(currWorkingPath, argv['next-round-json']);
+
 console.log('Started generating settlement reports.');
 
 if (nodeInfoJsonFilePath) {
@@ -109,7 +116,8 @@ if (webPortalDirPath) {
   console.log(`Create Latest Symlink: ${createLatestSymlink ? 'Yes' : 'No'}`);
 }
 
-console.log(`\nMin block height: ${minHeight == null ? 'Not specific' : minHeight}`);
+console.log(`\nChain ID: ${chainId == null ? 'Not specific' : chainId}`);
+console.log(`Min block height: ${minHeight == null ? 'Not specific' : minHeight}`);
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.start : 'Not specific'}`);
 console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
@@ -261,6 +269,13 @@ importPriceListDirectories(pricesDirPath)
       console.log('Copying report files to web portal directory succeeded');
     } else {
       console.log('Copying report files to web portal directory skipped');
+    }
+
+    if (nextRoundInfoPath) {
+      writeNextRoundInfoJson(chainId, maxHeight + 1, nextRoundInfoPath);
+      console.log('\nWriting the next round info JSON succeeded');
+    } else {
+      console.log('\nWriting the next round info JSON skipped');
     }
 
     console.log('\nGenerating settlement reports succeeded.');
