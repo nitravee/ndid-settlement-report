@@ -14,8 +14,10 @@ const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 const { reportExecRoundDirName } = require('./src/utils/pathUtil');
 const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir');
-const { writeNextRoundInfoJson } = require('./src/writeNextRoundInfoJson');
+const { writeNextRoundFiles } = require('./src/writeNextRoundFiles');
 
+
+const INPUT_DATETIME_FORMAT = 'YYYYMMDDHHmmss';
 
 let chainId;
 let minHeight;
@@ -62,13 +64,17 @@ const webPortalSubDirs = argv['portal-sub-dir']
   : [];
 const createLatestSymlink = argv['latest-symlink'];
 
-const execDatetime = moment(process.env.EXEC_DATETIME, 'YYYYMMDD_HHmmss').toDate();
+const execDatetime = moment(process.env.EXEC_DATETIME, INPUT_DATETIME_FORMAT).toDate();
 
 let billPeriod = null;
 const billPeriodStartStr = argv['bill-period-start'];
 const billPeriodEndStr = argv['bill-period-end'];
-const billPeriodStart = billPeriodStartStr ? moment(billPeriodStartStr, 'D-MMM-YY H:mm').toDate() : null;
-const billPeriodEnd = billPeriodEndStr ? moment(billPeriodEndStr, 'D-MMM-YY H:mm').toDate() : null;
+const billPeriodStart = billPeriodStartStr
+  ? moment(billPeriodStartStr, INPUT_DATETIME_FORMAT).toDate()
+  : null;
+const billPeriodEnd = billPeriodEndStr
+  ? moment(billPeriodEndStr, INPUT_DATETIME_FORMAT).toDate()
+  : null;
 if (
   billPeriodStart &&
   !Number.isNaN(billPeriodStart.getTime()) &&
@@ -99,7 +105,7 @@ const execRoundDirName = reportExecRoundDirName({
 });
 const outputDirPath = path.join(argvOutputDirPath, execRoundDirName);
 
-const nextRoundInfoPath = argv['next-round-json'] && path.resolve(currWorkingPath, argv['next-round-json']);
+const nextRoundDirPath = argv['next-round'] && path.resolve(currWorkingPath, argv['next-round']);
 
 console.log('Started generating settlement reports.');
 
@@ -112,6 +118,7 @@ console.log(`Prices Dir: ${pricesDirPath || 'Not specific'}`);
 console.log(`pendingRequests.json Path: ${prevPendingReqsPath || 'Not specific'}`);
 console.log(`Output Dir: ${outputDirPath || 'Not specific'}`);
 console.log(`Web Portal Dir: ${webPortalDirPath || 'Not specific'}`);
+console.log(`Web Portal Sub Dirs: ${webPortalSubDirs || 'Not specific'}`);
 if (webPortalDirPath) {
   console.log(`Create Latest Symlink: ${createLatestSymlink ? 'Yes' : 'No'}`);
 }
@@ -239,12 +246,17 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     }
 
     // Generate pending requests JSON file
-    fs.writeFile(path.join(outputDirPath, './pendingRequests.json'), JSON.stringify(categorizedReqs.pendingRequests, null, 2), (err) => {
-      if (err) {
-        throw err;
-      }
-    });
-    console.log(`\npendingRequest.json have been created at ${outputDirPath}`);
+    const pendingReqsJsonPath = path.join(outputDirPath, './pendingRequests.json');
+    fs.writeFileSync(
+      pendingReqsJsonPath,
+      JSON.stringify(categorizedReqs.pendingRequests, null, 2),
+      (err) => {
+        if (err) {
+          throw err;
+        }
+      },
+    );
+    console.log(`\npendingRequest.json created at ${outputDirPath}`);
 
     const outputCsvDirPath = path.join(outputDirPath, 'csv');
     await genCSV(
@@ -271,11 +283,16 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       console.log('Copying report files to web portal directory skipped');
     }
 
-    if (nextRoundInfoPath) {
-      writeNextRoundInfoJson(chainId, maxHeight + 1, nextRoundInfoPath);
-      console.log('\nWriting the next round info JSON succeeded');
+    if (nextRoundDirPath) {
+      writeNextRoundFiles(
+        chainId, maxHeight + 1,
+        billPeriod.end,
+        pendingReqsJsonPath,
+        nextRoundDirPath,
+      );
+      console.log('\nWriting next-round files succeeded');
     } else {
-      console.log('\nWriting the next round info JSON skipped');
+      console.log('\nWriting next-round files skipped');
     }
 
     console.log('\nGenerating settlement reports succeeded.');

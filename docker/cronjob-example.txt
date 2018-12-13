@@ -1,0 +1,4 @@
+SHELL=/bin/bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/home/
+
+0 0 * * * cd /bin/bash -l /home/ndid/settlement-report/genSettlement.sh >> /home/ndid/settlement-report/cronjob-daily.log

@@ -4,23 +4,27 @@ services:
     image: prapatb/ndid-settlement-report:latest
     environment: 
       - TM_RPC_IP=${TM_RPC_IP:-127.0.0.1}
-      - TM_RPC_PORT=${TM_RPC_PORT:-26000}
+      - TM_RPC_PORT=${TM_RPC_PORT:-45000}
       - QUERY_SETTLEMENT=${QUERY_SETTLEMENT:-YES}
+      - CHAIN_ID=${CHAIN_ID}
       - MIN_BLOCK_HEIGHT=${MIN_BLOCK_HEIGHT}
       - MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
       - START_BLOCK=${MIN_BLOCK_HEIGHT}
-      - END_BLOCK=${MIN_BLOCK_HEIGHT}
+      - END_BLOCK=${MAX_BLOCK_HEIGHT}
       - DEBUG_FILE=${DEBUG_FILE}
-      - EXEC_DATETIME=${DATETIME}
+      - EXEC_DATETIME=${EXEC_DATETIME}
       - BILL_PERIOD_START=${BILL_PERIOD_START}
       - BILL_PERIOD_END=${BILL_PERIOD_END}
+      - PORTAL_SUB_DIR=${PORTAL_SUB_DIR}
     security_opt:
       - no-new-privileges
     volumes:
-      - ./settlement/${DATETIME:-result}/NodeInfo:/NodeInfo
-      - ./settlement/${DATETIME:-result}/GetUsedTokenReport:/GetUsedTokenReport
-      - ./settlement/${DATETIME:-result}/RequestDetail:/RequestDetail
-      - ./settlement/${DATETIME:-result}/Reports:/Reports
+      - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/NodeInfo:/NodeInfo
+      - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/GetUsedTokenReport:/GetUsedTokenReport
+      - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/RequestDetail:/RequestDetail
+      - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/Reports:/Reports
       - ./settlement/Prices:/Prices
-      - ${PENDING_REQS_PATH:-./settlement/pendingRequests.json}:/pendingRequests.json
+      - ${PENDING_REQS_PATH:-./settlement/NextRound/pendingRequests.json}:/pendingRequests.json
+      - ${WEB_PORTAL_DIR:-./settlement/WebPortal}:/WebPortal
+      - ${NEXT_ROUND_DIR:-./settlement/NextRound}:/NextRound
     network_mode: "host"

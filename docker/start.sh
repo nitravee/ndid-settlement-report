@@ -28,11 +28,15 @@ node ./settlement-report/genSettlementReport \
   -d ./RequestDetail/ \
   -p ./Prices/ \
   -v ./pendingRequests.json \
+  -c "${CHAIN_ID}" \
   -b "${MIN_BLOCK_HEIGHT}" \
   -e "${MAX_BLOCK_HEIGHT}" \
   -o ./Reports \
+  -w ./WebPortal \
   --bill-period-start="${BILL_PERIOD_START}" \
   --bill-period-end="${BILL_PERIOD_END}" \
   --tm-rpc-ip=$TM_RPC_IP \
   --tm-rpc-port=$TM_RPC_PORT \
+  --next-round=./NextRound/ \
+  --portal-sub-dir=$PORTAL_SUB_DIR \
   --debug-file=$CREATE_DEBUG_FILE
