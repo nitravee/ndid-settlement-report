@@ -762,7 +762,7 @@ async function genCSV(
     });
     const csv = rpAsParser.parse(rpAs.sort(heightCompare));
     const rpAsFileNameWithExt = reportFileName({
-      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: csv.length, extension: 'csv',
+      ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: rpAs.length, extension: 'csv',
     });
     createFile(
       csv,
