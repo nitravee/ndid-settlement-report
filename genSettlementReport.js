@@ -134,8 +134,8 @@ if (enableDebugFile) {
 fs.writeFile(
   path.join(outputDirPath, './info.txt'),
   `Execution datetime: ${moment(execDatetime).format('D-MMM-YYYY HH:mm:ss')} 
-  Min block height: ${minHeight}
-  Max block height: ${maxHeight}`,
+Min block height: ${minHeight}
+Max block height: ${maxHeight}`,
   (err) => {
     if (err) {
       throw err;
@@ -143,7 +143,7 @@ fs.writeFile(
   },
 );
 
-importPriceListDirectories(pricesDirPath)
+importPriceListDirectories(path.join(pricesDirPath, chainId))
   .then(async (priceList) => {
     const priceCategories = getPriceCategories(priceList);
     console.log('\nImporting price list succeeded.');
