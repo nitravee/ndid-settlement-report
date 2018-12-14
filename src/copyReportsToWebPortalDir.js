@@ -25,7 +25,6 @@ function copyReportsToWebPortalDir(
     const destDirPath = path.join(webPortalOrgDirPath, ...subDirs, execRoundDirName);
     try {
       fs.copySync(infoPath, path.join(destDirPath, 'info.txt'));
-      fs.copySync(pendingCsvPath, path.join(destDirPath, 'pending.csv'));
       fs.copySync(orgDirPath, destDirPath);
       console.log(`${orgName} reports copied to ${destDirPath}`);
     } catch (err) {

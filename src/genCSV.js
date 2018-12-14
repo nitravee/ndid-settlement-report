@@ -41,6 +41,34 @@ function getNodeNames(nodeInfo, nodeIds) {
   return nodeIds.map(id => getNodeName(nodeInfo[id])).join(', ');
 }
 
+function getOrgRelatedReqs(reqs, nodeList, orgMktName) {
+  return reqs
+    .filter(({ detail, settlement }) => {
+      const { requester_node_id: rpId } = settlement;
+      const rpNodeInfo = nodeList.rpList.find(nodeInfo => nodeInfo.id === rpId);
+      if (rpNodeInfo && rpNodeInfo.org.marketingNameEn === orgMktName) {
+        return true;
+      }
+      const { idp_id_list: idpIds, data_request_list: dataReqs = [] } = detail;
+      const idpMktNames = nodeList
+        .idpList
+        .filter(nodeInfo => idpIds.includes(nodeInfo.id))
+        .map(nodeInfo => nodeInfo.org.marketingNameEn);
+      if (idpMktNames.includes(orgMktName)) {
+        return true;
+      }
+      const asIds = _.uniq(_.flatten(dataReqs.map(dataReq => dataReq.as_id_list)));
+      const asMktNames = nodeList
+        .asList
+        .filter(nodeInfo => asIds.includes(nodeInfo.id))
+        .map(nodeInfo => nodeInfo.org.marketingNameEn);
+      if (asMktNames.includes(orgMktName)) {
+        return true;
+      }
+      return false;
+    });
+}
+
 function genRowsFromPendingRequest(req, nodeInfo) {
   const { detail, settlement } = req;
 
@@ -384,13 +412,6 @@ async function genCSV(
     version,
   };
 
-  const allPendingReqIds = Object.keys(pendingRequests);
-  const allPendingReqRows = allPendingReqIds
-    .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
-    .reduce((prev, curr) => prev.concat(curr), []);
-  createFile(pendingParser.parse(allPendingReqRows.sort(heightCompare)), 'pending.csv', outputCsvDirPath);
-  logFileCreated('pending.csv', outputCsvDirPath);
-
   const allReqIds = Object.keys(settlementWithPrice);
   const allRows = allReqIds
     .map(reqId => genRowsFromRequest(settlementWithPrice[reqId], nodeInfo))
@@ -407,6 +428,39 @@ async function genCSV(
   const orgList = getOrgList(nodeList);
 
   orgList.allList.forEach(orgName => mkpath.sync(`csv/${orgName}`));
+
+  const allPendingReqIds = Object.keys(pendingRequests);
+  const allPendingReqRows = allPendingReqIds
+    .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
+    .reduce((prev, curr) => prev.concat(curr), [])
+    .sort(heightCompare);
+  createFile(pendingParser.parse(allPendingReqRows), 'all_pending.csv', outputCsvDirPath);
+  logFileCreated('all_pending.csv', outputCsvDirPath);
+
+  // #################################
+  // Pending by Org
+  // #################################
+  orgList.allList.forEach((orgName) => {
+    const orgPendingReqs = getOrgRelatedReqs(Object.values(pendingRequests), nodeList, orgName);
+    const orgPendingReqRows = orgPendingReqs
+      .map(req => genRowsFromPendingRequest(req, nodeInfo))
+      .reduce((prev, curr) => prev.concat(curr), [])
+      .sort(heightCompare);
+
+    const fileNameWithExt = reportFileName({
+      billPeriodStart: billPeriod.start,
+      billPeriodEnd: billPeriod.end,
+      minBlockHeight: blockRange.min,
+      maxBlockHeight: blockRange.max,
+      version,
+      reportIdentifier: 'pending',
+      rowCount: orgPendingReqRows.length,
+      extension: 'csv',
+    });
+    const destDirPath = join(outputCsvDirPath, orgName);
+    createFile(pendingParser.parse(orgPendingReqRows), fileNameWithExt, destDirPath);
+    logFileCreated(fileNameWithExt, destDirPath);
+  });
 
   nodeList.rpList.forEach(({ id, org: { marketingNameEn } }) => {
     const rpIdp = [];
