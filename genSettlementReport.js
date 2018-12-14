@@ -141,6 +141,8 @@ if (enableDebugFile) {
 fs.writeFile(
   path.join(outputDirPath, './info.txt'),
   `Execution datetime: ${moment(execDatetime).format('D-MMM-YYYY HH:mm:ss')} 
+Bill period start: ${moment(billPeriod.start).format('D-MMM-YYYY HH:mm:ss')}
+Bill period end: ${moment(billPeriod.end).format('D-MMM-YYYY HH:mm:ss')}
 Min block height: ${minHeight}
 Max block height: ${maxHeight}`,
   (err) => {
