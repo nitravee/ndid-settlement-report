@@ -8,17 +8,19 @@ function copyReportsToWebPortalDir(
   outputDirPath,
   webPortalDirPath,
   subDirs = [],
+  mktNameToWebPortalOrgDirNameMapping,
   createLatestSymlink,
 ) {
+  console.log(JSON.stringify(mktNameToWebPortalOrgDirNameMapping, null, 2))
   const csvDirPath = path.join(outputDirPath, 'csv');
   const orgDirPaths = getDirectories(csvDirPath);
 
   const infoPath = path.join(outputDirPath, 'info.txt');
-  const pendingCsvPath = path.join(csvDirPath, 'pending.csv');
 
   orgDirPaths.forEach((orgDirPath) => {
     const orgName = orgDirPath.substr(orgDirPath.lastIndexOf('/') + 1);
-    const webPortalOrgDirPath = path.join(webPortalDirPath, orgName);
+    const webPortalOrgDirPath =
+      path.join(webPortalDirPath, mktNameToWebPortalOrgDirNameMapping[orgName]);
     mkpath.sync(webPortalOrgDirPath);
 
     const execRoundDirName = outputDirPath.substr(outputDirPath.lastIndexOf('/') + 1);

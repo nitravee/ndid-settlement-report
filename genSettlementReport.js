@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const mkpath = require('mkpath');
 const moment = require('moment');
+const config = require('./config');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
@@ -278,6 +279,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
         outputDirPath,
         webPortalDirPath,
         webPortalSubDirs,
+        config.mktNameToWebPortalOrgDirNameMapping,
         createLatestSymlink,
       );
       console.log('Copying report files to web portal directory succeeded');
