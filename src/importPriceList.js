@@ -37,7 +37,12 @@ async function importPriceList(
     const { aal, ial } = row;
 
     for (const name of orgNames) {
-      const { idp: idpNodeIds } = mapping[name];
+      const orgNodeMap = mapping[name];
+      if (!orgNodeMap) {
+        continue;
+      }
+      const { idp: idpNodeIds } = orgNodeMap;
+
       if (idpNodeIds && idpNodeIds.length > 0) {
         for (const nodeId of idpNodeIds) {
           if (!prices.idp[nodeId]) {
@@ -59,7 +64,11 @@ async function importPriceList(
     const { Data: data } = row;
 
     for (const name of orgNames) {
-      const { as: asNodeIds } = mapping[name];
+      const orgNodeMap = mapping[name];
+      if (!orgNodeMap) {
+        continue;
+      }
+      const { as: asNodeIds } = orgNodeMap;
       if (asNodeIds && asNodeIds.length > 0) {
         for (const nodeId of asNodeIds) {
           if (!prices.as[nodeId]) {
