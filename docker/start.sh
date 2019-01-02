@@ -39,5 +39,5 @@ node ./settlement-report/genSettlementReport \
   --tm-rpc-port=$TM_RPC_PORT \
   --next-round=./NextRound/ \
   --portal-sub-dir=$PORTAL_SUB_DIR \
-  --latest-symlink=$LATEST_SYMLINK \
+  --create-latest=$CREATE_LATEST \
   --debug-file=$CREATE_DEBUG_FILE
