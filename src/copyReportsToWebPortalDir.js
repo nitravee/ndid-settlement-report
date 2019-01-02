@@ -9,9 +9,9 @@ function copyReportsToWebPortalDir(
   webPortalDirPath,
   subDirs = [],
   mktNameToWebPortalOrgDirNameMapping,
-  createLatestSymlink,
+  createLatest,
 ) {
-  console.log(JSON.stringify(mktNameToWebPortalOrgDirNameMapping, null, 2))
+  console.log(JSON.stringify(mktNameToWebPortalOrgDirNameMapping, null, 2));
   const csvDirPath = path.join(outputDirPath, 'csv');
   const orgDirPaths = getDirectories(csvDirPath);
 
@@ -33,14 +33,16 @@ function copyReportsToWebPortalDir(
       console.error(`ERROR: Failed to copy ${orgName} reports to ${destDirPath}`, err);
     }
 
-    if (createLatestSymlink) {
-      const latestSymlinkPath = path.join(webPortalOrgDirPath, ...subDirs, 'latest');
+    if (createLatest) {
+      const latestDirPath = path.join(webPortalOrgDirPath, ...subDirs, 'latest');
       try {
-        fs.removeSync(latestSymlinkPath);
-        fs.ensureSymlinkSync(destDirPath, latestSymlinkPath);
-        console.log(`Symlink ${latestSymlinkPath} to ${destDirPath} created`);
+        // NOTE: This is to remove existing symlink from old code (for migration purpose)
+        fs.removeSync(latestDirPath);
+
+        fs.copySync(destDirPath, latestDirPath);
+        console.log(`Copying ${destDirPath} to ${latestDirPath} (latest dir) succeeded`);
       } catch (err) {
-        console.error(`ERROR: Failed to create symlink ${latestSymlinkPath} to ${destDirPath}`, err);
+        console.error(`ERROR: Failed to copy symlink ${destDirPath} to ${latestDirPath}`, err);
       }
     }
   });

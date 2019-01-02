@@ -63,7 +63,7 @@ if (argv.w) {
 const webPortalSubDirs = argv['portal-sub-dir']
   ? argv['portal-sub-dir'].split('/').filter(str => str)
   : [];
-const createLatestSymlink = argv['latest-symlink'];
+const createLatest = argv['create-latest'];
 
 const execDatetime = moment(process.env.EXEC_DATETIME, INPUT_DATETIME_FORMAT).toDate();
 
@@ -121,7 +121,7 @@ console.log(`Output Dir: ${outputDirPath || 'Not specific'}`);
 console.log(`Web Portal Dir: ${webPortalDirPath || 'Not specific'}`);
 console.log(`Web Portal Sub Dirs: ${webPortalSubDirs || 'Not specific'}`);
 if (webPortalDirPath) {
-  console.log(`Create Latest Symlink: ${createLatestSymlink ? 'Yes' : 'No'}`);
+  console.log(`Create Latest Dir: ${createLatest ? 'Yes' : 'No'}`);
 }
 
 console.log(`\nChain ID: ${chainId == null ? 'Not specific' : chainId}`);
@@ -280,7 +280,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
         webPortalDirPath,
         webPortalSubDirs,
         config.mktNameToWebPortalOrgDirNameMapping,
-        createLatestSymlink,
+        createLatest,
       );
       console.log('Copying report files to web portal directory succeeded');
     } else {
