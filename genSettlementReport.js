@@ -275,7 +275,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
 
     if (webPortalDirPath) {
-      copyReportsToWebPortalDir(
+      await copyReportsToWebPortalDir(
         outputDirPath,
         webPortalDirPath,
         webPortalSubDirs,

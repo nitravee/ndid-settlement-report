@@ -16,7 +16,7 @@ services:
       - BILL_PERIOD_START=${BILL_PERIOD_START}
       - BILL_PERIOD_END=${BILL_PERIOD_END}
       - PORTAL_SUB_DIR=${PORTAL_SUB_DIR}
-      - LATEST_SYMLINK=${LATEST_SYMLINK}
+      - CREATE_LATEST=${CREATE_LATEST}
     security_opt:
       - no-new-privileges
     volumes:
@@ -24,8 +24,8 @@ services:
       - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/GetUsedTokenReport:/GetUsedTokenReport
       - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/RequestDetail:/RequestDetail
       - ./settlement/${BILL_PERIOD_START}_${BILL_PERIOD_END}_${MIN_BLOCK_HEIGHT:-1}_${MAX_BLOCK_HEIGHT:-unlimit}_${EXEC_DATETIME}/Reports:/Reports
-      - ./settlement/Prices:/Prices
       - ${PENDING_REQS_PATH:-./settlement/NextRound/pendingRequests.json}:/pendingRequests.json
       - ${WEB_PORTAL_DIR:-./settlement/WebPortal}:/WebPortal
+      - ${PRICES_DIR:-./settlement/Prices}:/Prices
       - ${NEXT_ROUND_DIR:-./settlement/NextRound}:/NextRound
     network_mode: "host"

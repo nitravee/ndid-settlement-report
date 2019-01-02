@@ -2,9 +2,10 @@ const path = require('path');
 const mkpath = require('mkpath');
 const fs = require('fs-extra');
 const { getDirectories } = require('./utils/pathUtil');
+const { zipDir } = require('./utils/fileUtil');
 
 
-function copyReportsToWebPortalDir(
+async function copyReportsToWebPortalDir(
   outputDirPath,
   webPortalDirPath,
   subDirs = [],
@@ -17,7 +18,7 @@ function copyReportsToWebPortalDir(
 
   const infoPath = path.join(outputDirPath, 'info.txt');
 
-  orgDirPaths.forEach((orgDirPath) => {
+  for (const orgDirPath of orgDirPaths) {
     const orgName = orgDirPath.substr(orgDirPath.lastIndexOf('/') + 1);
     const webPortalOrgDirPath =
       path.join(webPortalDirPath, mktNameToWebPortalOrgDirNameMapping[orgName]);
@@ -33,19 +34,33 @@ function copyReportsToWebPortalDir(
       console.error(`ERROR: Failed to copy ${orgName} reports to ${destDirPath}`, err);
     }
 
+    try {
+      await zipDir(destDirPath, `${destDirPath}.zip`);
+      console.log(`Zipping ${destDirPath} to ${destDirPath}.zip succeeded`);
+    } catch (err) {
+      console.error(`ERROR: Failed to zip ${destDirPath} to ${destDirPath}.zip`, err);
+    }
+
     if (createLatest) {
       const latestDirPath = path.join(webPortalOrgDirPath, ...subDirs, 'latest');
-      try {
-        // NOTE: This is to remove existing symlink from old code (for migration purpose)
-        fs.removeSync(latestDirPath);
+      fs.removeSync(latestDirPath);
+      fs.removeSync(`${latestDirPath}.zip`);
 
+      try {
         fs.copySync(destDirPath, latestDirPath);
         console.log(`Copying ${destDirPath} to ${latestDirPath} (latest dir) succeeded`);
       } catch (err) {
-        console.error(`ERROR: Failed to copy symlink ${destDirPath} to ${latestDirPath}`, err);
+        console.error(`ERROR: Failed to copy ${destDirPath} to ${latestDirPath} (latest dir)`, err);
+      }
+
+      try {
+        await zipDir(latestDirPath, `${latestDirPath}.zip`);
+        console.log(`Zipping ${latestDirPath} to ${latestDirPath}.zip succeeded`);
+      } catch (err) {
+        console.error(`ERROR: Failed to zip ${latestDirPath} to ${latestDirPath}.zip`, err);
       }
     }
-  });
+  }
 }
 
 module.exports = {
