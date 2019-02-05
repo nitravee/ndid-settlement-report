@@ -15,7 +15,7 @@ const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 const { reportExecRoundDirName } = require('./src/utils/pathUtil');
 const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir');
-const { writeNextRoundFiles } = require('./src/writeNextRoundFiles');
+const { writeRoundFiles } = require('./src/writeRoundFiles');
 
 
 const INPUT_DATETIME_FORMAT = 'YYYYMMDDHHmmss';
@@ -287,10 +287,28 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       console.log('Copying report files to web portal directory skipped');
     }
 
+    const thisRoundDirPath = path.join(outputDirPath, 'this-round');
+    writeRoundFiles(
+      chainId,
+      minHeight,
+      maxHeight,
+      billPeriod.start,
+      billPeriod.end,
+      prevPendingReqsPath,
+      thisRoundDirPath,
+      {
+        outputRoundInfoJsonFileName: 'thisRound.json',
+      },
+    );
+    console.log('\nWriting this-round files succeeded');
+
     if (nextRoundDirPath) {
-      writeNextRoundFiles(
-        chainId, maxHeight + 1,
+      writeRoundFiles(
+        chainId,
+        maxHeight + 1,
+        null,
         billPeriod.end,
+        null,
         pendingReqsJsonPath,
         nextRoundDirPath,
       );
