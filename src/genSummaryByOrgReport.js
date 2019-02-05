@@ -19,14 +19,15 @@ const MIDDLE_CENTER_ALIGNMENT = { vertical: 'middle', horizontal: 'center' };
 const UNIT_NUM_FMT = '#,##0';
 const MONEY_NUM_FMT = '#,##0.00';
 
+function calculateTableItemSummaryInfo(settlementRows = [], options = {}) {
+  const { netTotalIncludingWht } = options;
 
-function calculateTableItemSummaryInfo(settlementRows = []) {
   const unit = settlementRows.length;
   const rawTotal = _.sum(settlementRows.map(row => row.price));
   const total = _.round(rawTotal, 2);
   const vat = _.round(rawTotal * 0.07, 2);
   const wht = _.round(rawTotal * 0.03, 2);
-  const netTotal = total + vat + wht;
+  const netTotal = total + vat + (netTotalIncludingWht ? wht : 0);
 
   return {
     unit,
@@ -35,6 +36,14 @@ function calculateTableItemSummaryInfo(settlementRows = []) {
     wht,
     netTotal,
   };
+}
+
+function calculateTablePayToItemSummaryInfo(settlementRows) {
+  return calculateTableItemSummaryInfo(settlementRows, { netTotalIncludingWht: false });
+}
+
+function calculateTableBillToItemSummaryInfo(settlementRows) {
+  return calculateTableItemSummaryInfo(settlementRows, { netTotalIncludingWht: true });
 }
 
 function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
@@ -276,7 +285,7 @@ async function genSummaryByOrgReport(
           memberName: 'NDID',
           items: [{
             description: 'NDID Fee',
-            ...calculateTableItemSummaryInfo(ndidRows),
+            ...calculateTablePayToItemSummaryInfo(ndidRows),
           }],
         },
         ...payToMktNames
@@ -285,14 +294,14 @@ async function genSummaryByOrgReport(
             if (rpIdpRows[payeeName]) {
               items.push({
                 description: `${payeeName} IdP`,
-                ...calculateTableItemSummaryInfo(rpIdpRows[payeeName]),
+                ...calculateTablePayToItemSummaryInfo(rpIdpRows[payeeName]),
               });
             }
 
             if (rpAsRows[payeeName]) {
               items.push({
                 description: `${payeeName} AS`,
-                ...calculateTableItemSummaryInfo(rpAsRows[payeeName]),
+                ...calculateTablePayToItemSummaryInfo(rpAsRows[payeeName]),
               });
             }
 
@@ -336,14 +345,14 @@ async function genSummaryByOrgReport(
           if (idpRpRows[payerName]) {
             items.push({
               description: `${mktName} IdP`,
-              ...calculateTableItemSummaryInfo(idpRpRows[payerName]),
+              ...calculateTableBillToItemSummaryInfo(idpRpRows[payerName]),
             });
           }
 
           if (asRpRows[payerName]) {
             items.push({
               description: `${mktName} AS`,
-              ...calculateTableItemSummaryInfo(asRpRows[payerName]),
+              ...calculateTableBillToItemSummaryInfo(asRpRows[payerName]),
             });
           }
 
