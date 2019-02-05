@@ -223,21 +223,7 @@ async function genXlsxFile(
   };
 
   // Bill To Table
-  const lastBillToTableRowIndex =
-    writeSummaryTable(sheet, bilToSectHeaderRowIndex + 1, billToSummary);
-
-  // Settle
-  const settleRowIndex = lastBillToTableRowIndex + 1;
-  sheet.getRow(settleRowIndex).font = Object.assign({}, DEFAULT_FONT, { bold: true });
-  setSolidFill(sheet, settleRowIndex, 1, settleRowIndex, LAST_COL_INDEX, 'FFED7D31');
-  setBorder(sheet, settleRowIndex, 1, settleRowIndex, LAST_COL_INDEX);
-  sheet.mergeCells(settleRowIndex, 1, settleRowIndex, LAST_COL_INDEX - 1);
-  const settleLabelCell = sheet.getCell(settleRowIndex, 1);
-  settleLabelCell.value = 'SETTLE';
-  settleLabelCell.alignment = MIDDLE_CENTER_ALIGNMENT;
-  const settleValueCell = sheet.getCell(settleRowIndex, LAST_COL_INDEX);
-  settleValueCell.value = billToSummary.total.netTotal - payToSummary.total.netTotal;
-  settleValueCell.numFmt = MONEY_NUM_FMT;
+  writeSummaryTable(sheet, bilToSectHeaderRowIndex + 1, billToSummary);
 
   const folderPath = path.join(outputCsvDirPath, memberName, 'summary-by-org');
   mkpath.sync(folderPath);
