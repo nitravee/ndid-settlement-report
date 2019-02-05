@@ -20,14 +20,25 @@ const UNIT_NUM_FMT = '#,##0';
 const MONEY_NUM_FMT = '#,##0.00';
 
 function calculateTableItemSummaryInfo(settlementRows = [], options = {}) {
-  const { netTotalIncludingWht } = options;
+  const { mode = 'BILL_TO' } = options;
 
   const unit = settlementRows.length;
   const rawTotal = _.sum(settlementRows.map(row => row.price));
   const total = _.round(rawTotal, 2);
   const vat = _.round(rawTotal * 0.07, 2);
   const wht = _.round(rawTotal * 0.03, 2);
-  const netTotal = total + vat + (netTotalIncludingWht ? wht : 0);
+  let netTotal;
+  switch (mode) {
+    case 'PAY_TO':
+      netTotal = total + vat;
+      break;
+    case 'BILL_TO':
+      netTotal = (total + vat) - wht;
+      break;
+
+    default:
+      throw new Error(`Unsupported mode "${mode}" when calculate table item summary info of summary by org excel`);
+  }
 
   return {
     unit,
@@ -39,11 +50,11 @@ function calculateTableItemSummaryInfo(settlementRows = [], options = {}) {
 }
 
 function calculateTablePayToItemSummaryInfo(settlementRows) {
-  return calculateTableItemSummaryInfo(settlementRows, { netTotalIncludingWht: false });
+  return calculateTableItemSummaryInfo(settlementRows, { mode: 'PAY_TO' });
 }
 
 function calculateTableBillToItemSummaryInfo(settlementRows) {
-  return calculateTableItemSummaryInfo(settlementRows, { netTotalIncludingWht: true });
+  return calculateTableItemSummaryInfo(settlementRows, { mode: 'BILL_TO' });
 }
 
 function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
@@ -138,7 +149,8 @@ async function genXlsxFile(
   workbook.modified = workbook.created;
   workbook.properties.date1904 = true;
 
-  const sheet = workbook.addWorksheet(memberName);
+  const sheetName = memberName.length <= 30 ? memberName : memberName.substr(0, 30);
+  const sheet = workbook.addWorksheet(sheetName);
   sheet.properties.defaultRowHeight = 20;
 
   for (let i = 1; i <= LAST_COL_INDEX; i++) {
