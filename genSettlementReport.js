@@ -6,6 +6,7 @@ const moment = require('moment');
 const config = require('./config');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
+const { importRPGroups } = require('./src/importRPGroups');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
 const { mergePrevPendingReqsToCurrReqs } = require('./src/mergePrevPendingReqsToCurrReqs');
 const { categorizeRequests } = require('./src/categorizeRequests');
@@ -27,6 +28,7 @@ let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport'
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
+let groupDirPath = path.resolve(__dirname, './data/Group');
 let argvOutputDirPath = path.resolve(__dirname, './reports');
 let webPortalDirPath;
 
@@ -52,6 +54,9 @@ if (argv.v) {
 }
 if (argv.p) {
   pricesDirPath = path.resolve(currWorkingPath, argv.p);
+}
+if (argv.g) {
+  groupDirPath = path.resolve(currWorkingPath, argv.g);
 }
 if (argv.o) {
   argvOutputDirPath = path.resolve(currWorkingPath, argv.o);
@@ -116,6 +121,7 @@ if (nodeInfoJsonFilePath) {
 console.log(`GetUsedTokenReport Dir: ${usedTokenReportDirPath || 'Not specific'}`);
 console.log(`RequestDetail Dir: ${requestDetailDirPath || 'Not specific'}`);
 console.log(`Prices Dir: ${pricesDirPath || 'Not specific'}`);
+console.log(`Group Dir: ${groupDirPath || 'Not specific'}`);
 console.log(`pendingRequests.json Path: ${prevPendingReqsPath || 'Not specific'}`);
 console.log(`Output Dir: ${outputDirPath || 'Not specific'}`);
 console.log(`Web Portal Dir: ${webPortalDirPath || 'Not specific'}`);
@@ -166,6 +172,16 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       fs.writeFile(path.resolve(debugFileDirPath, './priceCategories.json'), JSON.stringify(priceCategories, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceCategories.json', err);
+        }
+      });
+    }
+
+    const rpGroups = importRPGroups(path.join(groupDirPath, chainId));
+    console.log('\nImporting RP groups succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './rpGroups.json'), JSON.stringify(rpGroups, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: rpGroups.json', err);
         }
       });
     }
@@ -221,7 +237,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const settlementWithPrice = createSummaryReport(categorizedReqs.finishedRequests, priceList);
+    const settlementWithPrice = createSummaryReport(categorizedReqs.finishedRequests, priceList, rpGroups);
     console.log('Calculating price for settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
