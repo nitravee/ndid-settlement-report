@@ -8,11 +8,12 @@ const { getDirectories } = require('./utils/pathUtil');
 async function importPriceList(
   minBlockHeight,
   maxBlockHeight,
+  group,
   idpPricePath,
   asPricePath,
   orgToNodeIdMapPath,
 ) {
-  if (!idpPricePath || !asPricePath || !orgToNodeIdMapPath) {
+  if (!idpPricePath || !asPricePath || !orgToNodeIdMapPath || !group) {
     console.error('Import price list failed. Missing parameter(s).');
     return undefined;
   }
@@ -84,20 +85,22 @@ async function importPriceList(
   const result = {
     min_block_height: minBlockHeight,
     max_block_height: maxBlockHeight,
-    prices,
+    prices: {
+      [group]: prices,
+    },
   };
 
   return result;
 }
 
-async function importPriceListDirectories(rootDirPath) {
-  if (!rootDirPath) {
-    console.error('Root directory path must be specific.');
+async function importPriceListDirectories(rootPriceDirPath) {
+  if (!rootPriceDirPath) {
+    console.error('Root price directory path must be specific.');
     return undefined;
   }
 
-  const dirPaths = getDirectories(rootDirPath);
-  const minHeights = dirPaths
+  const heightDirPaths = getDirectories(rootPriceDirPath);
+  const minHeights = heightDirPaths
     .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
     .sort((a, b) => a - b);
 
@@ -105,17 +108,35 @@ async function importPriceListDirectories(rootDirPath) {
   for (let i = 0; i < minHeights.length; i++) {
     const minHeight = minHeights[i];
     const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
-    const dirPath = join(rootDirPath, minHeight.toString());
+    const heightDirPath = join(rootPriceDirPath, minHeight.toString());
 
-    const prices = await importPriceList(
-      minHeight,
-      maxHeight,
-      join(dirPath, 'idp_price.csv'),
-      join(dirPath, 'as_price.csv'),
-      join(dirPath, 'orgToNodeIdMapping.json'),
-    );
+    const grpDirPaths = getDirectories(heightDirPath);
+    const grps = grpDirPaths
+      .map(dirPath => dirPath.substring(dirPath.lastIndexOf('/') + 1));
 
-    result.push(prices);
+    let prices;
+    for (const grp of grps) {
+      const dirPath = join(heightDirPath, grp);
+
+      const grpPrices = await importPriceList(
+        minHeight,
+        maxHeight,
+        grp,
+        join(dirPath, 'idp_price.csv'),
+        join(dirPath, 'as_price.csv'),
+        join(heightDirPath, 'orgToNodeIdMapping.json'),
+      );
+
+      if (!prices) { // First group in height range
+        prices = grpPrices;
+      } else {
+        prices.prices = Object.assign({}, prices.prices, grpPrices.prices);
+      }
+    }
+
+    if (prices) {
+      result.push(prices);
+    }
   }
 
   return result;
@@ -124,7 +145,8 @@ async function importPriceListDirectories(rootDirPath) {
 function getPriceCategories(priceList) {
   const priceCatsObj = priceList
     .map((priceInfo) => {
-      const { prices: { idp, as } } = priceInfo;
+      const { prices } = priceInfo;
+      const { idp, as } = Object.values(prices)[0];
       const sampleIdpPrice = Object.values(idp)[0];
       const idpPriceCats = Object.keys(sampleIdpPrice).reduce(
         (catList, aal) =>
