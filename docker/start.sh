@@ -27,6 +27,8 @@ node ./settlement-report/genSettlementReport \
   -r ./GetUsedTokenReport/ \
   -d ./RequestDetail/ \
   -p ./Prices/ \
+  -n ./Plan/ \
+  -g ./Group/ \
   -v ./pendingRequests.json \
   -c "${CHAIN_ID}" \
   -b "${MIN_BLOCK_HEIGHT}" \
