@@ -1,6 +1,6 @@
 
 const _ = require('lodash');
-const { getGroupOfNodeId } = require('./importRPGroups');
+const { getGroupOfNodeId } = require('./importRpGroups');
 
 
 function getIdpFullPrice(priceList, nodeId, requestedAal, requestedIal, rpGroup) {

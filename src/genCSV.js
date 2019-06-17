@@ -1,7 +1,3 @@
-// App code here
-
-// const value = require('./expected1');
-
 const _ = require('lodash');
 const fs = require('fs');
 const mkpath = require('mkpath');
@@ -9,6 +5,8 @@ const { join } = require('path');
 const Json2csvParser = require('json2csv').Parser;
 const { genSummaryByOrgReport } = require('./genSummaryByOrgReport');
 const { reportFileName } = require('./utils/pathUtil');
+const { getRpPlanOfOrg } = require('./importRpPlans');
+const { calculateNdidPrice } = require('./calculateNdidPrice');
 const {
   pendingParser,
   rpIdpParser,
@@ -22,7 +20,7 @@ const {
 const { logFileCreated } = require('./utils/logUtil');
 
 
-const NDID_PRICE_PER_REQ = 5;
+// const NDID_PRICE_PER_REQ = 5;
 
 
 function heightCompare(rowA, rowB) {
@@ -175,7 +173,7 @@ function genRowsFromRequest(req, nodeInfo) {
     timed_out: settlement.timed_out ? 'Yes' : 'No',
     height: settlement.height,
     mode: settlement.mode,
-    price: NDID_PRICE_PER_REQ,
+    numberOfStamps: settlement.stamp_count,
   }] : [];
 
   return {
@@ -372,11 +370,10 @@ function genSummaryRpNdid(
       rpId: curr.rp_id,
       rpName: getNodeName(nodeInfo[curr.rp_id]),
       rpNameObj: getNodeNameObj(nodeInfo[curr.rp_id]),
-      ndidPrice: prev.ndidPrice + curr.price,
+      numberOfStamps: prev.numberOfStamps + curr.numberOfStamps,
     }), {
-      ndidPrice: 0,
+      numberOfStamps: 0,
     });
-  row.ndidPrice = _.round(row.ndidPrice, 2);
   row.numberOfTxns = rpReqs.length;
 
   const sumCsv = rpNdidSumParser.parse([row]);
@@ -399,6 +396,8 @@ async function genCSV(
   pendingRequests,
   nodeInfo,
   allPriceCategories,
+  rpPlans,
+  monthYear,
   billPeriod,
   blockRange,
   version,
@@ -702,10 +701,14 @@ async function genCSV(
     // #################################
     const rpNdidRows = allRows.rpNdid.filter(row =>
       row.rp_name_obj.marketing_name_en === rpMktName);
+    const rpNumOfStamps = _.sum(rpNdidRows.map(row => row.numberOfStamps));
+    const rpPlan = getRpPlanOfOrg(rpPlans, rpMktName, monthYear);
     const rpNdidSumByOrg = [{
       org: rpMktName,
+      rpPlan,
       numberOfTxns: rpNdidRows.length,
-      ndidPrice: _.sum(rpNdidRows.map(row => row.price)),
+      numberOfStamps: rpNumOfStamps,
+      ndidPrice: calculateNdidPrice(rpPlan, rpNumOfStamps),
     }];
     const rpNdidSumByOrgFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: rpNdidSumByOrg.length, extension: 'csv',

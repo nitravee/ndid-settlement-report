@@ -7,7 +7,7 @@ const DEFAULT_GROUP = {
   name: DEFAULT_GROUP_NAME,
 };
 
-function importRPGroups(groupDirPath) {
+function importRpGroups(groupDirPath) {
   const heightDirPaths = getDirectories(groupDirPath);
   const minHeights = heightDirPaths
     .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
@@ -49,7 +49,7 @@ function getGroupOfNodeId(rpGroups, nodeId, blockHeight) {
 }
 
 module.exports = {
-  importRPGroups,
+  importRpGroups,
   getGroupOfNodeId,
   DEFAULT_GROUP,
 };

@@ -440,9 +440,8 @@ const fieldsRpNdid = [
     label: 'Mode',
     value: 'mode',
   }, {
-    label: 'NDID Price',
-    value: row => row.price.toFixed(2),
-    stringify: false,
+    label: 'Number of Stamps',
+    value: 'numberOfStamps',
   },
 ];
 const fieldsRpNdidSummary = [
@@ -479,9 +478,8 @@ const fieldsRpNdidSummary = [
     label: 'Number of Transactions',
     value: 'numberOfTxns',
   }, {
-    label: 'NDID Price',
-    value: row => row.ndidPrice.toFixed(2),
-    stringify: false,
+    label: 'Number of Stamps',
+    value: 'numberOfStamps',
   },
 ];
 const fieldsRpNdidSummaryByOrg = [
@@ -489,8 +487,14 @@ const fieldsRpNdidSummaryByOrg = [
     label: 'Organization',
     value: 'org',
   }, {
+    label: 'Plan',
+    value: 'rpPlan',
+  }, {
     label: 'Number of Transactions',
     value: 'numberOfTxns',
+  }, {
+    label: 'Number of Stamps',
+    value: 'numberOfStamps',
   }, {
     label: 'NDID Price',
     value: row => row.ndidPrice.toFixed(2),

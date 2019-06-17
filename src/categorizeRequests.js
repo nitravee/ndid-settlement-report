@@ -235,6 +235,7 @@ function categorizeRequests(currReqs) {
       request_id,
       requester_node_id,
       height,
+      stamp_count: steps.length,
       idpList,
       asList,
       mode: detail.mode,
