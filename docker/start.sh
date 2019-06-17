@@ -35,6 +35,7 @@ node ./settlement-report/genSettlementReport \
   -e "${MAX_BLOCK_HEIGHT}" \
   -o ./Reports \
   -w ./WebPortal \
+  --month="${MONTH}" \
   --bill-period-start="${BILL_PERIOD_START}" \
   --bill-period-end="${BILL_PERIOD_END}" \
   --tm-rpc-ip=$TM_RPC_IP \

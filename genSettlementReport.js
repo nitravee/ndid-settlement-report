@@ -96,29 +96,30 @@ if (monthYearStr) {
 const monthlyMode = monthYear != null;
 
 let billPeriod = null;
+let billPeriodStart;
+let billPeriodEnd;
 if (monthlyMode) {
-  billPeriod = {
-    start: moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT),
-    end: moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT).add(1, 'months'),
-  };
+  billPeriodStart = moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT).toDate();
+  billPeriodEnd = moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT).add(1, 'months').toDate();
 } else {
   const billPeriodStartStr = argv['bill-period-start'];
   const billPeriodEndStr = argv['bill-period-end'];
-  const billPeriodStart = billPeriodStartStr
+  billPeriodStart = billPeriodStartStr
     ? moment(billPeriodStartStr, INPUT_DATETIME_FORMAT).toDate()
     : null;
-  const billPeriodEnd = billPeriodEndStr
+  billPeriodEnd = billPeriodEndStr
     ? moment(billPeriodEndStr, INPUT_DATETIME_FORMAT).toDate()
     : null;
-  if (
-    billPeriodStart && !Number.isNaN(billPeriodStart.getTime()) &&
-    billPeriodEnd && !Number.isNaN(billPeriodEnd.getTime())
-  ) {
-    billPeriod = {
-      start: billPeriodStart,
-      end: billPeriodEnd,
-    };
-  }
+}
+
+if (
+  billPeriodStart && !Number.isNaN(billPeriodStart.getTime()) &&
+  billPeriodEnd && !Number.isNaN(billPeriodEnd.getTime())
+) {
+  billPeriod = {
+    start: billPeriodStart,
+    end: billPeriodEnd,
+  };
 }
 
 const enableDebugFile = argv['debug-file'];
@@ -184,7 +185,8 @@ fs.writeFile(
 Bill period start: ${moment(billPeriod.start).format('D-MMM-YYYY HH:mm:ss')}
 Bill period end: ${moment(billPeriod.end).format('D-MMM-YYYY HH:mm:ss')}
 Min block height: ${minHeight}
-Max block height: ${maxHeight}`,
+Max block height: ${maxHeight}
+Monthly mode: ${monthlyMode ? 'Yes' : 'No'}`,
   (err) => {
     if (err) {
       throw err;
