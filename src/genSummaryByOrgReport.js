@@ -3,6 +3,8 @@ const path = require('path');
 const mkpath = require('mkpath');
 const Excel = require('exceljs');
 const moment = require('moment');
+const { getRpPlanOfOrg } = require('./importRpPlans');
+const { calculateNdidPrice } = require('./calculateNdidPrice');
 const { setOuterBorder, setBorder, setSolidFill } = require('./utils/excelUtil');
 const { reportFileName } = require('./utils/pathUtil');
 const { logFileCreated } = require('./utils/logUtil');
@@ -20,10 +22,11 @@ const UNIT_NUM_FMT = '#,##0';
 const MONEY_NUM_FMT = '#,##0.00';
 
 function calculateTableItemSummaryInfo(settlementRows = [], options = {}) {
-  const { mode = 'BILL_TO' } = options;
+  const { mode = 'BILL_TO', rawTotal: overwrittenRawTotal } = options;
 
   const unit = settlementRows.length;
-  const rawTotal = _.sum(settlementRows.map(row => row.price));
+  const rawTotal =
+    overwrittenRawTotal != null ? overwrittenRawTotal : _.sum(settlementRows.map(row => row.price));
   const total = _.round(rawTotal, 2);
   const vat = _.round(rawTotal * 0.07, 2);
   const wht = _.round(rawTotal * 0.03, 2);
@@ -49,12 +52,12 @@ function calculateTableItemSummaryInfo(settlementRows = [], options = {}) {
   };
 }
 
-function calculateTablePayToItemSummaryInfo(settlementRows) {
-  return calculateTableItemSummaryInfo(settlementRows, { mode: 'PAY_TO' });
+function calculateTablePayToItemSummaryInfo(settlementRows, options = {}) {
+  return calculateTableItemSummaryInfo(settlementRows, Object.assign(options, { mode: 'PAY_TO' }));
 }
 
-function calculateTableBillToItemSummaryInfo(settlementRows) {
-  return calculateTableItemSummaryInfo(settlementRows, { mode: 'BILL_TO' });
+function calculateTableBillToItemSummaryInfo(settlementRows, options = {}) {
+  return calculateTableItemSummaryInfo(settlementRows, Object.assign(options, { mode: 'BILL_TO' }));
 }
 
 function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
@@ -269,6 +272,8 @@ async function genXlsxFile(
 async function genSummaryByOrgReport(
   allRows,
   orgList,
+  rpPlans,
+  monthYear,
   billPeriod,
   blockRange,
   version,
@@ -289,6 +294,8 @@ async function genSummaryByOrgReport(
     );
     const ndidRows = allRows.rpNdid.filter(row =>
       row.rp_name_obj.marketing_name_en === mktName);
+    const rpNumOfStamps = _.sum(ndidRows.map(row => row.numberOfStamps));
+    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, mktName, monthYear);
 
     const payToMktNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
     const payToSummary = {
@@ -297,7 +304,10 @@ async function genSummaryByOrgReport(
           memberName: 'NDID',
           items: [{
             description: 'NDID Fee',
-            ...calculateTablePayToItemSummaryInfo(ndidRows),
+            ...calculateTablePayToItemSummaryInfo(
+              ndidRows,
+              { rawTotal: monthYear ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 0 },
+            ),
           }],
         },
         ...payToMktNames

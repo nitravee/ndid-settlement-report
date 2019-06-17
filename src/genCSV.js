@@ -945,7 +945,16 @@ async function genCSV(
   // #################################
   // Summary by Org
   // #################################
-  await genSummaryByOrgReport(allRows, orgList, billPeriod, blockRange, version, outputCsvDirPath);
+  await genSummaryByOrgReport(
+    allRows,
+    orgList,
+    rpPlans,
+    monthYear,
+    billPeriod,
+    blockRange,
+    version,
+    outputCsvDirPath,
+  );
 }
 
 module.exports.genCSV = genCSV;
