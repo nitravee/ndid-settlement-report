@@ -702,13 +702,13 @@ async function genCSV(
     const rpNdidRows = allRows.rpNdid.filter(row =>
       row.rp_name_obj.marketing_name_en === rpMktName);
     const rpNumOfStamps = _.sum(rpNdidRows.map(row => row.numberOfStamps));
-    const rpPlan = getRpPlanOfOrg(rpPlans, rpMktName, monthYear);
+    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, rpMktName, monthYear);
     const rpNdidSumByOrg = [{
       org: rpMktName,
       rpPlan,
       numberOfTxns: rpNdidRows.length,
       numberOfStamps: rpNumOfStamps,
-      ndidPrice: calculateNdidPrice(rpPlan, rpNumOfStamps),
+      ndidPrice: rpPlan ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 'N/A',
     }];
     const rpNdidSumByOrgFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: rpMktName, rowCount: rpNdidSumByOrg.length, extension: 'csv',
