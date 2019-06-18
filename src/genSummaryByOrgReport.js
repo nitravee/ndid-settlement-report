@@ -366,14 +366,14 @@ async function genSummaryByOrgReport(
           const items = [];
           if (idpRpRows[payerName]) {
             items.push({
-              description: `${mktName} IdP`,
+              description: `${payerName} IdP`,
               ...calculateTableBillToItemSummaryInfo(idpRpRows[payerName]),
             });
           }
 
           if (asRpRows[payerName]) {
             items.push({
-              description: `${mktName} AS`,
+              description: `${payerName} AS`,
               ...calculateTableBillToItemSummaryInfo(asRpRows[payerName]),
             });
           }
