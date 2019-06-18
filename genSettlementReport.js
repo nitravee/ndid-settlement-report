@@ -375,7 +375,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
           chainId,
           maxHeight + 1,
           null,
-          null,
+          billPeriod.end,
           null,
           { year: nextMonthMoment.year(), month: nextMonthMoment.month() + 1 },
           pendingReqsJsonPath,
