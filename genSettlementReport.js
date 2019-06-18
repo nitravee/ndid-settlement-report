@@ -182,11 +182,13 @@ if (enableDebugFile) {
 fs.writeFile(
   path.join(outputDirPath, './info.txt'),
   `Execution datetime: ${moment(execDatetime).format('D-MMM-YYYY HH:mm:ss')} 
+Monthly mode: ${monthlyMode ? 'Yes' : 'No'}
+Month: ${monthlyMode ? monthYearStr : 'N/A'}
 Bill period start: ${moment(billPeriod.start).format('D-MMM-YYYY HH:mm:ss')}
 Bill period end: ${moment(billPeriod.end).format('D-MMM-YYYY HH:mm:ss')}
 Min block height: ${minHeight}
 Max block height: ${maxHeight}
-Monthly mode: ${monthlyMode ? 'Yes' : 'No'}`,
+`,
   (err) => {
     if (err) {
       throw err;
@@ -357,6 +359,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       maxHeight,
       billPeriod.start,
       billPeriod.end,
+      monthYear,
       prevPendingReqsPath,
       thisRoundDirPath,
       {
@@ -366,15 +369,30 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     console.log('\nWriting this-round files succeeded');
 
     if (nextRoundDirPath) {
-      writeRoundFiles(
-        chainId,
-        maxHeight + 1,
-        null,
-        billPeriod.end,
-        null,
-        pendingReqsJsonPath,
-        nextRoundDirPath,
-      );
+      if (monthlyMode) {
+        const nextMonthMoment = moment(`${monthYear.month}-${monthYear.year}`, 'M-YYYY').add(1, 'months');
+        writeRoundFiles(
+          chainId,
+          maxHeight + 1,
+          null,
+          null,
+          null,
+          { year: nextMonthMoment.year(), month: nextMonthMoment.month() + 1 },
+          pendingReqsJsonPath,
+          nextRoundDirPath,
+        );
+      } else {
+        writeRoundFiles(
+          chainId,
+          maxHeight + 1,
+          null,
+          billPeriod.end,
+          null,
+          null,
+          pendingReqsJsonPath,
+          nextRoundDirPath,
+        );
+      }      
       console.log('\nWriting next-round files succeeded');
     } else {
       console.log('\nWriting next-round files skipped');
