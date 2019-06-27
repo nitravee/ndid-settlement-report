@@ -9,6 +9,7 @@ const { importPriceListDirectories, getPriceCategories } = require('./src/import
 const { importRpGroups } = require('./src/importRpGroups');
 const { importRpPlans } = require('./src/importRpPlans');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
+const { getNodeIdToOrgMapping } = require('./src/getNodeIdToOrgMapping');
 const { mergePrevPendingReqsToCurrReqs } = require('./src/mergePrevPendingReqsToCurrReqs');
 const { categorizeRequests } = require('./src/categorizeRequests');
 const { createSummaryReport } = require('./src/createSummaryReport');
@@ -197,10 +198,21 @@ Max block height: ${maxHeight}
 );
 
 importPriceListDirectories(path.join(pricesDirPath, chainId))
-  .then(async (priceList) => {
+  .then(async ({ orgs: orgInfo, prices: priceList }) => {
     const priceCategories = getPriceCategories(priceList);
+    const nodeIdToOrgMapping = getNodeIdToOrgMapping(orgInfo);
     console.log('\nImporting price list succeeded.');
     if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './orgInfo.json'), JSON.stringify(orgInfo, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: orgInfo.json', err);
+        }
+      });
+      fs.writeFile(path.resolve(debugFileDirPath, './nodeIdToOrgMapping.json'), JSON.stringify(nodeIdToOrgMapping, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: nodeIdToOrgMapping.json', err);
+        }
+      });
       fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
         if (err) {
           console.warn('Failed to write debug file: priceList.json', err);
@@ -273,7 +285,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const categorizedReqs = categorizeRequests(reqData);
+    const categorizedReqs = categorizeRequests(reqData, nodeIdToOrgMapping);
     console.log('Calculating settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
@@ -329,6 +341,8 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       settlementWithPrice,
       categorizedReqs.pendingRequests,
       nodeInfo,
+      orgInfo,
+      nodeIdToOrgMapping,
       priceCategories,
       rpPlans,
       monthYear,
@@ -392,7 +406,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
           pendingReqsJsonPath,
           nextRoundDirPath,
         );
-      }      
+      }
       console.log('\nWriting next-round files succeeded');
     } else {
       console.log('\nWriting next-round files skipped');

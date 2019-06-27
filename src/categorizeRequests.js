@@ -1,5 +1,7 @@
 const _ = require('lodash');
 const { checkIfRequestHasCloseStep, checkIfRequestHasTimeOutStep } = require('./utils/requestUtil');
+const { getHeightDependentConfig } = require('./utils/configUtil');
+const { getOrgShortNameByNodeId } = require('./getNodeIdToOrgMapping');
 
 // const checkConditionDetail = {
 //   statusAcceptGreaterThanOrEqualMinIdp: (responseList, minIdp) => {
@@ -158,13 +160,12 @@ function getSettlementReqStatus(reqDetail) {
   return status;
 }
 
-function categorizeRequests(currReqs) {
+function categorizeRequests(currReqs, nodeIdToOrgMapping) {
   let settlement = {};
   let requester_node_id = 0;
   const finishedRequests = {};
   const pendingRequests = {};
   const currReqIds = Object.keys(currReqs);
-
 
   currReqIds.forEach((reqId) => {
     const req = currReqs[reqId];
@@ -174,10 +175,13 @@ function categorizeRequests(currReqs) {
     const idpList = [];
     const asList = [];
     let height;
+    let scopedNodeIdToOrgMapping = {};
+
     steps.forEach((dataInSteps) => {
       if (dataInSteps.method === 'CreateRequest') {
         height = dataInSteps.height;
         requester_node_id = dataInSteps.nodeId;
+        scopedNodeIdToOrgMapping = getHeightDependentConfig(nodeIdToOrgMapping, height, 'mapping');
       } else if (dataInSteps.method === 'CreateIdpResponse') {
         const idp_fee_ratio = 1;
         if (detail.response_list !== null) {
@@ -229,11 +233,23 @@ function categorizeRequests(currReqs) {
       }))
       .reduce((prev, curr) => prev.concat(curr), []));
 
+    for (const idpEntry of idpList) {
+      idpEntry.idp_org_short_name =
+        getOrgShortNameByNodeId(idpEntry.idp_id, scopedNodeIdToOrgMapping);
+    }
+
+    for (const asEntry of asList) {
+      asEntry.as_org_short_name =
+        getOrgShortNameByNodeId(asEntry.as_id, scopedNodeIdToOrgMapping);
+    }
+
     const isClosed = checkIfRequestHasCloseStep(req);
     const isTimedOut = checkIfRequestHasTimeOutStep(req);
     settlement = {
       request_id,
       requester_node_id,
+      requester_org_short_name:
+        getOrgShortNameByNodeId(requester_node_id, scopedNodeIdToOrgMapping),
       height,
       stamp_count: steps.length,
       idpList,

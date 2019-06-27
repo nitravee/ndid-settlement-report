@@ -3,7 +3,17 @@ const fs = require('fs');
 const { join } = require('path');
 const _ = require('lodash');
 const { getDirectories } = require('./utils/pathUtil');
+const { UNKNOWN_ORG, UNKNOWN_ORG_SHORT_NAME } = require('./getNodeIdToOrgMapping');
 
+
+function importOrgInfo(minBlockHeight, maxBlockHeight, orgJsonFilePath) {
+  const orgInfoJson = JSON.parse(fs.readFileSync(orgJsonFilePath, 'utf8'));
+  return {
+    min_block_height: minBlockHeight,
+    max_block_height: maxBlockHeight,
+    org_info: { ...orgInfoJson, [UNKNOWN_ORG_SHORT_NAME]: UNKNOWN_ORG },
+  };
+}
 
 async function importPriceList(
   minBlockHeight,
@@ -104,7 +114,10 @@ async function importPriceListDirectories(rootPriceDirPath) {
     .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
     .sort((a, b) => a - b);
 
-  const result = [];
+  const result = {
+    orgs: [],
+    prices: [],
+  };
   for (let i = 0; i < minHeights.length; i++) {
     const minHeight = minHeights[i];
     const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
@@ -113,6 +126,8 @@ async function importPriceListDirectories(rootPriceDirPath) {
     const grpDirPaths = getDirectories(heightDirPath);
     const grps = grpDirPaths
       .map(dirPath => dirPath.substring(dirPath.lastIndexOf('/') + 1));
+
+    result.orgs.push(importOrgInfo(minHeight, maxHeight, join(heightDirPath, 'orgInfo.json')));
 
     let prices;
     for (const grp of grps) {
@@ -124,7 +139,7 @@ async function importPriceListDirectories(rootPriceDirPath) {
         grp,
         join(dirPath, 'idp_price.csv'),
         join(dirPath, 'as_price.csv'),
-        join(heightDirPath, 'orgToNodeIdMapping.json'),
+        join(heightDirPath, 'orgInfo.json'),
       );
 
       if (!prices) { // First group in height range
@@ -135,7 +150,7 @@ async function importPriceListDirectories(rootPriceDirPath) {
     }
 
     if (prices) {
-      result.push(prices);
+      result.prices.push(prices);
     }
   }
 

@@ -33,5 +33,6 @@ module.exports = {
     CIMB: 'cimb',
     TBANK: 'tbank',
     NDIDMOCK: 'ndidmock',
+    UNKNOWN: 'unknown',
   },
 };

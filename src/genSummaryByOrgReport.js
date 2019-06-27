@@ -137,7 +137,8 @@ function writeSummaryTable(sheet, tableHeaderRowIndex, summary) {
 }
 
 async function genXlsxFile(
-  memberName,
+  memberShortName,
+  memberFullName,
   billPeriod,
   blockRange,
   version,
@@ -152,7 +153,7 @@ async function genXlsxFile(
   workbook.modified = workbook.created;
   workbook.properties.date1904 = true;
 
-  const sheetName = memberName.length <= 30 ? memberName : memberName.substr(0, 30);
+  const sheetName = memberShortName.length <= 30 ? memberShortName : memberShortName.substr(0, 30);
   const sheet = workbook.addWorksheet(sheetName);
   sheet.properties.defaultRowHeight = 20;
 
@@ -198,7 +199,7 @@ async function genXlsxFile(
   const memberNameLabelCell = sheet.getCell(3, 1);
   memberNameLabelCell.value = 'Member Name:';
   const memberNameValueCell = sheet.getCell(3, 2);
-  memberNameValueCell.value = memberName;
+  memberNameValueCell.value = memberFullName;
   setOuterBorder(sheet, 3, 1, 5, 2);
 
   // Send to
@@ -249,7 +250,7 @@ async function genXlsxFile(
   // Bill To Table
   writeSummaryTable(sheet, bilToSectHeaderRowIndex + 1, billToSummary);
 
-  const folderPath = path.join(outputCsvDirPath, memberName, 'summary-by-org');
+  const folderPath = path.join(outputCsvDirPath, memberShortName, 'summary-by-org');
   mkpath.sync(folderPath);
   const fileNameWithExt = reportFileName({
     billPeriodStart: billPeriod.start,
@@ -257,7 +258,7 @@ async function genXlsxFile(
     minBlockHeight: blockRange.min,
     maxBlockHeight: blockRange.max,
     version,
-    reportIdentifier: memberName,
+    reportIdentifier: memberShortName,
     extension: 'xlsx',
   });
   const filePath = path.join(folderPath, fileNameWithExt);
@@ -265,13 +266,14 @@ async function genXlsxFile(
     await workbook.xlsx.writeFile(filePath);
     logFileCreated(fileNameWithExt, folderPath);
   } catch (err) {
-    console.error(`ERROR: Failed to write csv/${memberName}/summary-by-org/${memberName}.xlsx.`, err);
+    console.error(`ERROR: Failed to write csv/${memberShortName}/summary-by-org/${memberShortName}.xlsx.`, err);
   }
 }
 
 async function genSummaryByOrgReport(
   allRows,
   orgList,
+  collapsedOrgInfo,
   rpPlans,
   monthYear,
   billPeriod,
@@ -279,25 +281,28 @@ async function genSummaryByOrgReport(
   version,
   outputCsvDirPath,
 ) {
-  const orgMktNames = _.uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList]);
-  for (const mktName of orgMktNames) {
+  const orgShortNames = _.uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList]);
+  for (const orgShortName of orgShortNames) {
+    const orgFullName = collapsedOrgInfo[orgShortName]
+      && collapsedOrgInfo[orgShortName].fullName.en;
+
     // Pay To
     const rpIdpRows = _.groupBy(
       allRows.rpIdp.filter(row =>
-        row.rp_name_obj.marketing_name_en === mktName),
-      row => row.idp_name_obj.marketing_name_en,
+        row.rp_org_short_name === orgShortName),
+      row => row.idp_org_short_name,
     );
     const rpAsRows = _.groupBy(
       allRows.rpAs.filter(row =>
-        row.rp_name_obj.marketing_name_en === mktName),
-      row => row.as_name_obj.marketing_name_en,
+        row.rp_org_short_name === orgShortName),
+      row => row.as_org_short_name,
     );
     const ndidRows = allRows.rpNdid.filter(row =>
-      row.rp_name_obj.marketing_name_en === mktName);
+      row.rp_org_short_name === orgShortName);
     const rpNumOfStamps = _.sum(ndidRows.map(row => row.numberOfStamps));
-    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, mktName, monthYear);
+    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, orgShortName, monthYear);
 
-    const payToMktNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
+    const payToOrgShortNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
     const payToSummary = {
       members: [
         {
@@ -310,25 +315,27 @@ async function genSummaryByOrgReport(
             ),
           }],
         },
-        ...payToMktNames
-          .map((payeeName) => {
+        ...payToOrgShortNames
+          .map((payeeOrgShortName) => {
             const items = [];
-            if (rpIdpRows[payeeName]) {
+            const payeeOrgFullName = collapsedOrgInfo[payeeOrgShortName]
+              && collapsedOrgInfo[payeeOrgShortName].fullName.en;
+            if (rpIdpRows[payeeOrgShortName]) {
               items.push({
-                description: `${payeeName} IdP`,
-                ...calculateTablePayToItemSummaryInfo(rpIdpRows[payeeName]),
+                description: `${payeeOrgFullName} IdP`,
+                ...calculateTablePayToItemSummaryInfo(rpIdpRows[payeeOrgShortName]),
               });
             }
 
-            if (rpAsRows[payeeName]) {
+            if (rpAsRows[payeeOrgShortName]) {
               items.push({
-                description: `${payeeName} AS`,
-                ...calculateTablePayToItemSummaryInfo(rpAsRows[payeeName]),
+                description: `${payeeOrgFullName} AS`,
+                ...calculateTablePayToItemSummaryInfo(rpAsRows[payeeOrgShortName]),
               });
             }
 
             return {
-              memberName: payeeName,
+              memberName: payeeOrgFullName,
               items,
             };
           }),
@@ -350,36 +357,38 @@ async function genSummaryByOrgReport(
     // Bill To
     const idpRpRows = _.groupBy(
       allRows.rpIdp.filter(row =>
-        row.idp_name_obj.marketing_name_en === mktName),
-      row => row.rp_name_obj.marketing_name_en,
+        row.idp_org_short_name === orgShortName),
+      row => row.rp_org_short_name,
     );
     const asRpRows = _.groupBy(
       allRows.rpAs.filter(row =>
-        row.as_name_obj.marketing_name_en === mktName),
-      row => row.rp_name_obj.marketing_name_en,
+        row.as_org_short_name === orgShortName),
+      row => row.rp_org_short_name,
     );
 
-    const billToMktNames = _.uniq([...Object.keys(idpRpRows), ...Object.keys(asRpRows)]);
+    const billToOrgShortNames = _.uniq([...Object.keys(idpRpRows), ...Object.keys(asRpRows)]);
     const billToSummary = {
-      members: billToMktNames
-        .map((payerName) => {
+      members: billToOrgShortNames
+        .map((payerOrgShortName) => {
           const items = [];
-          if (idpRpRows[payerName]) {
+          const payerOrgFullName = collapsedOrgInfo[payerOrgShortName]
+              && collapsedOrgInfo[payerOrgShortName].fullName.en;
+          if (idpRpRows[payerOrgShortName]) {
             items.push({
-              description: `${payerName} IdP`,
-              ...calculateTableBillToItemSummaryInfo(idpRpRows[payerName]),
+              description: `${payerOrgFullName} IdP`,
+              ...calculateTableBillToItemSummaryInfo(idpRpRows[payerOrgShortName]),
             });
           }
 
-          if (asRpRows[payerName]) {
+          if (asRpRows[payerOrgShortName]) {
             items.push({
-              description: `${payerName} AS`,
-              ...calculateTableBillToItemSummaryInfo(asRpRows[payerName]),
+              description: `${payerOrgFullName} AS`,
+              ...calculateTableBillToItemSummaryInfo(asRpRows[payerOrgShortName]),
             });
           }
 
           return {
-            memberName: payerName,
+            memberName: payerOrgFullName,
             items,
           };
         }),
@@ -398,7 +407,8 @@ async function genSummaryByOrgReport(
     };
 
     await genXlsxFile(
-      mktName,
+      orgShortName,
+      orgFullName,
       billPeriod,
       blockRange,
       version,
