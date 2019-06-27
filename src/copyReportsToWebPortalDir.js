@@ -20,8 +20,12 @@ async function copyReportsToWebPortalDir(
 
   for (const orgDirPath of orgDirPaths) {
     const orgName = orgDirPath.substr(orgDirPath.lastIndexOf('/') + 1);
+    const orgDirName = mktNameToWebPortalOrgDirNameMapping[orgName];
+    if (!orgDirName) {
+      console.error(`Org dir name of ${orgName} not found`);
+    }
     const webPortalOrgDirPath =
-      path.join(webPortalDirPath, mktNameToWebPortalOrgDirNameMapping[orgName]);
+      path.join(webPortalDirPath, orgDirName);
     mkpath.sync(webPortalOrgDirPath);
 
     const execRoundDirName = outputDirPath.substr(outputDirPath.lastIndexOf('/') + 1);
