@@ -342,7 +342,6 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       categorizedReqs.pendingRequests,
       nodeInfo,
       orgInfo,
-      nodeIdToOrgMapping,
       priceCategories,
       rpPlans,
       monthYear,
