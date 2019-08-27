@@ -1,63 +1,38 @@
-const { RP_PLAN } = require('./importRpPlans');
+const { RP_PLAN_TYPE } = require('./importRpPlans');
 
-function calculatePlan1NdidPrice(numberOfStamps) {
+function calculateNdidPrice(planDetail, numberOfStamps) {
+  const { steps } = planDetail;
+
+  let remainStamps = numberOfStamps;
   let price = 0;
-  if (numberOfStamps <= 300000) {
-    price += numberOfStamps * 3;
-    return price;
-  }
-  price += 300000 * 3;
+  for (const step of steps) {
+    if (remainStamps <= 0) {
+      break;
+    }
 
-  if (numberOfStamps <= 600000) {
-    price += (numberOfStamps - 300000) * 2.75;
-    return price;
-  }
-  price += 300000 * 2.75;
+    const { type, numberOfStamps: stepStamps } = step;
+    const isUnlimited = stepStamps <= 0;
+    let stampCount = remainStamps <= stepStamps ? remainStamps : stepStamps;
+    if (isUnlimited) {
+      stampCount = remainStamps;
+    }
 
-  if (numberOfStamps <= 900000) {
-    price += (numberOfStamps - 600000) * 2.5;
-    return price;
+    switch (type) {
+      case RP_PLAN_TYPE.PER_STAMP:
+        price += step.perStampRate * stampCount;
+        break;
+      case RP_PLAN_TYPE.PREPAID:
+        price += step.price;
+        break;
+
+      default:
+        throw new Error(`Unsupported RP plan type - ${type}`);
+    }
+
+    remainStamps = isUnlimited ? 0 : (remainStamps - stepStamps);
   }
-  price += 300000 * 2.5;
-  price += (numberOfStamps - 900000) * 2;
 
   return price;
-}
-
-function calculatePlan2SNdidPrice(numberOfStamps) {
-  let price = 1500000;
-  if (numberOfStamps > 1000000) {
-    price += (numberOfStamps - 1000000) * 2;
-  }
-  return price;
-}
-
-function calculatePlan2MNdidPrice(numberOfStamps) {
-  let price = 2100000;
-  if (numberOfStamps > 1500000) {
-    price += (numberOfStamps - 1500000) * 2;
-  }
-  return price;
-}
-
-function calculatePlan2LNdidPrice() {
-  return 2700000;
-}
-
-function calculateNdidPrice(rpPlan, numberOfStamps) {
-  switch (rpPlan) {
-    case RP_PLAN.PLAN_1:
-      return calculatePlan1NdidPrice(numberOfStamps);
-    case RP_PLAN.PLAN_2.S:
-      return calculatePlan2SNdidPrice(numberOfStamps);
-    case RP_PLAN.PLAN_2.M:
-      return calculatePlan2MNdidPrice(numberOfStamps);
-    case RP_PLAN.PLAN_2.L:
-      return calculatePlan2LNdidPrice();
-    default:
-      console.error('Unsupported RP plan', rpPlan);
-  }
-  return undefined;
 }
 
 module.exports = { calculateNdidPrice };

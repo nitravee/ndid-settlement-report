@@ -2,23 +2,13 @@ const moment = require('moment');
 const { join } = require('path');
 const fs = require('fs');
 const { getDirectories } = require('./utils/pathUtil');
+const { getMonthYearDependentConfig, compareMonthYear } = require('./utils/configUtil');
 
 
-const RP_PLAN = {
-  PLAN_1: 'Plan 1',
-  PLAN_2: {
-    S: 'Plan 2-S',
-    M: 'Plan 2-M',
-    L: 'Plan 2-L',
-  },
+const RP_PLAN_TYPE = {
+  PER_STAMP: 'perStamp',
+  PREPAID: 'prepaid',
 };
-const DEFAULT_RP_PLAN = RP_PLAN.PLAN_1;
-
-function compareMonthYear(a, b) {
-  if (a.year < b.year) { return -1; }
-  if (a.year > b.year) { return 1; }
-  return a.month - b.month;
-}
 
 function importRpPlans(planDirPath) {
   const yearDirPaths = getDirectories(planDirPath);
@@ -59,13 +49,27 @@ function importRpPlans(planDirPath) {
       };
     }
 
-    const dirPath = join(planDirPath, minMonthYear.year.toString(), minMonthYear.month.toString(), 'rpPlans.json');
-    const rpPlans = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
+    const dirPath = join(planDirPath, minMonthYear.year.toString(), minMonthYear.month.toString());
+    const rpPlans = JSON.parse(fs.readFileSync(join(dirPath, 'rpPlans.json'), 'utf8'));
+    const planDetail = JSON.parse(fs.readFileSync(join(dirPath, 'planDetail.json'), 'utf8'));
+
+    // Validate if RP plans aligns with plan detail
+    Object.values(rpPlans).forEach((planName) => {
+      if (!planDetail[planName]) {
+        throw new Error(`Unsupported RP plan (${planName}) in ${join(dirPath, 'rpPlans.json')}`);
+      }
+    });
+
+    Object.keys(planDetail).forEach((planName) => {
+      planDetail[planName].name = planName;
+    });
 
     result.push({
       min_month_year: minMonthYear,
       max_month_year: maxMonthYear,
       rp_plans: rpPlans,
+      plan_detail: planDetail,
+      default_plan: Object.keys(planDetail).find(planName => planDetail[planName].default),
     });
   }
 
@@ -73,20 +77,11 @@ function importRpPlans(planDirPath) {
 }
 
 function getRpPlanOfOrg(rpPlans, org, monthYear) {
-  const scopedPlans = rpPlans
-    .filter((item) => {
-      if (item.max_month_year == null) {
-        // NOTE: monthYear >= item.min_month_year
-        return compareMonthYear(monthYear, item.min_month_year) >= 0;
-      }
-      // NOTE: monthYear >= item.min_month_year && monthYear <= item.max_month_year
-      return compareMonthYear(monthYear, item.min_month_year) >= 0
-        && compareMonthYear(monthYear, item.max_month_year) <= 0;
-    })[0].rp_plans || {};
-
-  return scopedPlans[org] || DEFAULT_RP_PLAN;
+  const scopedPlans = getMonthYearDependentConfig(rpPlans, monthYear);
+  const planName = scopedPlans.rp_plans[org] || scopedPlans.default_plan;
+  return scopedPlans.plan_detail[planName];
 }
 
 module.exports = {
-  importRpPlans, getRpPlanOfOrg, compareMonthYear, RP_PLAN, DEFAULT_RP_PLAN,
+  importRpPlans, getRpPlanOfOrg, RP_PLAN_TYPE,
 };

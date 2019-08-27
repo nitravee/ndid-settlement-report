@@ -683,7 +683,7 @@ async function genCSV(
     const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, rpOrgShortName, monthYear);
     const rpNdidSumByOrg = [{
       org: rpOrgShortName,
-      rpPlan,
+      rpPlan: rpPlan.name,
       numberOfTxns: rpNdidRows.length,
       numberOfStamps: rpNumOfStamps,
       ndidPrice: rpPlan ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 'N/A',
