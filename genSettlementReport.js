@@ -12,7 +12,7 @@ const { importPreviousPendingRequests } = require('./src/importPreviousPendingRe
 const { getNodeIdToOrgMapping } = require('./src/getNodeIdToOrgMapping');
 const { mergePrevPendingReqsToCurrReqs } = require('./src/mergePrevPendingReqsToCurrReqs');
 const { categorizeRequests } = require('./src/categorizeRequests');
-const { createSummaryReport } = require('./src/createSummaryReport');
+const { calculateSettlementInfo } = require('./src/calculateSettlementInfo');
 const { genCSV } = require('./src/genCSV');
 const { queryNodeInfo } = require('./src/queryNodeInfo');
 const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
@@ -285,7 +285,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const categorizedReqs = categorizeRequests(reqData, nodeIdToOrgMapping);
+    const categorizedReqs = categorizeRequests(reqData, nodeIdToOrgMapping, minHeight, maxHeight);
     console.log('Calculating settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
@@ -296,7 +296,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     }
 
     const settlementWithPrice =
-      createSummaryReport(categorizedReqs.finishedRequests, priceList, rpGroups);
+      calculateSettlementInfo(categorizedReqs, priceList, rpGroups);
     console.log('Calculating price for settlement succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
@@ -311,7 +311,8 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       nodeInfo = JSON.parse(fs.readFileSync(nodeInfoJsonFilePath));
     } else {
       nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
-        .values(settlementWithPrice)
+        .values(settlementWithPrice.finishedRequests)
+        .concat(Object.values(settlementWithPrice.pendingRequests))
         .map(req => req.settlement)));
       console.log('Querying node info succeeded.');
     }

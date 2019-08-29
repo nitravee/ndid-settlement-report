@@ -160,7 +160,7 @@ function getSettlementReqStatus(reqDetail) {
   return status;
 }
 
-function categorizeRequests(currReqs, nodeIdToOrgMapping) {
+function categorizeRequests(currReqs, nodeIdToOrgMapping, minBlockHeight, maxBlockHeight) {
   let settlement = {};
   let requester_node_id = 0;
   const finishedRequests = {};
@@ -251,7 +251,9 @@ function categorizeRequests(currReqs, nodeIdToOrgMapping) {
       requester_org_short_name:
         getOrgShortNameByNodeId(requester_node_id, scopedNodeIdToOrgMapping),
       height,
-      stamp_count: steps.length,
+      all_stamp_count: steps.length,
+      scoped_stamp_count:
+        steps.filter(s => s.height >= minBlockHeight && s.height <= maxBlockHeight).length,
       idpList,
       asList,
       mode: detail.mode,

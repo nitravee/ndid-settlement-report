@@ -32,20 +32,34 @@ function importRpGroups(groupDirPath) {
 }
 
 function getGroupOfNodeId(rpGroups, nodeId, blockHeight) {
-  const scopedGrps = rpGroups
-    .filter((item) => {
-      if (item.max_block_height == null) {
-        return blockHeight >= item.min_block_height;
-      }
-      return blockHeight >= item.min_block_height
-        && blockHeight <= item.max_block_height;
-    })[0].rp_groups;
+  let ggg;
+  try {
+    [ggg] = rpGroups
+      .filter((item) => {
+        if (item.max_block_height == null) {
+          return blockHeight >= item.min_block_height;
+        }
+        return blockHeight >= item.min_block_height
+          && blockHeight <= item.max_block_height;
+      });
+    const scopedGrps = rpGroups
+      .filter((item) => {
+        if (item.max_block_height == null) {
+          return blockHeight >= item.min_block_height;
+        }
+        return blockHeight >= item.min_block_height
+          && blockHeight <= item.max_block_height;
+      })[0].rp_groups;
 
-  const relatedGrp = Object
-    .keys(scopedGrps)
-    .map(grpName => Object.assign({}, scopedGrps[grpName], { name: grpName }))
-    .filter(grp => grp.node_ids.includes(nodeId))[0];
-  return relatedGrp || DEFAULT_GROUP;
+    const relatedGrp = Object
+      .keys(scopedGrps)
+      .map(grpName => Object.assign({}, scopedGrps[grpName], { name: grpName }))
+      .filter(grp => grp.node_ids.includes(nodeId))[0];
+    return relatedGrp || DEFAULT_GROUP;
+  } catch (err) {
+    console.error('>>>', nodeId, blockHeight, ggg);
+    throw err;
+  }
 }
 
 module.exports = {

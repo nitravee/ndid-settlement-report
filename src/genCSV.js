@@ -165,7 +165,7 @@ function genRowsFromRequest(req, nodeInfo) {
     timed_out: settlement.timed_out ? 'Yes' : 'No',
     height: settlement.height,
     mode: settlement.mode,
-    numberOfStamps: settlement.stamp_count,
+    numberOfStamps: settlement.scoped_stamp_count,
   }] : [];
 
   return {
@@ -384,9 +384,11 @@ async function genCSV(
     version,
   };
 
-  const allReqIds = Object.keys(settlementWithPrice);
+  const { finishedRequests } = settlementWithPrice;
+
+  const allReqIds = Object.keys(finishedRequests);
   const allRows = allReqIds
-    .map(reqId => genRowsFromRequest(settlementWithPrice[reqId], nodeInfo))
+    .map(reqId => genRowsFromRequest(finishedRequests[reqId], nodeInfo))
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
       rpAs: prev.rpAs.concat(curr.rpAs),

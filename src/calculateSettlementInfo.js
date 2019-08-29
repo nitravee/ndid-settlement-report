@@ -23,11 +23,13 @@ function getAsFullPrice(priceList, nodeId, serviceId, rpGroup) {
   return nodePriceList[serviceId] || 0;
 }
 
-function createSummaryReport(objData, priceList, rpGroups) {
+function calculateSettlementInfo(objData, priceList, rpGroups) {
   const result = _.cloneDeep(objData);
 
-  for (const rootName in result) {
-    const { settlement } = result[rootName];
+  // Finished requests
+  const { finishedRequests } = result;
+  for (const rootName in finishedRequests) {
+    const { settlement } = finishedRequests[rootName];
     const rpNodeId = settlement.requester_node_id;
     const rpGroup = getGroupOfNodeId(rpGroups, rpNodeId, settlement.height);
 
@@ -58,4 +60,4 @@ function createSummaryReport(objData, priceList, rpGroups) {
   return result;
 }
 
-module.exports.createSummaryReport = createSummaryReport;
+module.exports.calculateSettlementInfo = calculateSettlementInfo;
