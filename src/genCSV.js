@@ -370,6 +370,7 @@ async function genCSV(
   orgInfo,
   allPriceCategories,
   rpPlans,
+  rpPlanDetails,
   monthYear,
   billPeriod,
   blockRange,
@@ -682,7 +683,7 @@ async function genCSV(
     const rpNdidRows = allRows.rpNdid.filter(row =>
       row.rp_org_short_name === rpOrgShortName);
     const rpNumOfStamps = _.sum(rpNdidRows.map(row => row.numberOfStamps));
-    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, rpOrgShortName, monthYear);
+    const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, rpOrgShortName, blockRange.min);
     const rpNdidSumByOrg = [{
       org: rpOrgShortName,
       rpPlan: rpPlan.name,
@@ -930,6 +931,7 @@ async function genCSV(
     orgShortNameList,
     collapsedOrgInfo,
     rpPlans,
+    rpPlanDetails,
     monthYear,
     billPeriod,
     blockRange,

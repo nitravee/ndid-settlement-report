@@ -7,7 +7,7 @@ const config = require('./config');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
 const { importRpGroups } = require('./src/importRpGroups');
-const { importRpPlans } = require('./src/importRpPlans');
+const { importRpPlans, importRpPlanDetails } = require('./src/importRpPlans');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
 const { getNodeIdToOrgMapping } = require('./src/getNodeIdToOrgMapping');
 const { mergePrevPendingReqsToCurrReqs } = require('./src/mergePrevPendingReqsToCurrReqs');
@@ -32,6 +32,7 @@ let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequest
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
 let groupDirPath = path.resolve(__dirname, './data/Group');
 let planDirPath = path.resolve(__dirname, './data/Plan');
+let planDetailDirPath = path.resolve(__dirname, './data/PlanDetail');
 let argvOutputDirPath = path.resolve(__dirname, './reports');
 let webPortalDirPath;
 
@@ -63,6 +64,9 @@ if (argv.g) {
 }
 if (argv.n) {
   planDirPath = path.resolve(currWorkingPath, argv.n);
+}
+if (argv.t) {
+  planDetailDirPath = path.resolve(currWorkingPath, argv.t);
 }
 if (argv.o) {
   argvOutputDirPath = path.resolve(currWorkingPath, argv.o);
@@ -235,7 +239,20 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const rpPlans = importRpPlans(planDirPath);
+    const rpPlanDetails = importRpPlanDetails(
+      path.join(planDetailDirPath, chainId),
+      minHeight,
+      maxHeight,
+    );
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: rpPlanDetails.json', err);
+        }
+      });
+    }
+
+    const rpPlans = importRpPlans(planDirPath, rpPlanDetails, chainId, minHeight, maxHeight);
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
         if (err) {
@@ -345,6 +362,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       orgInfo,
       priceCategories,
       rpPlans,
+      rpPlanDetails,
       monthYear,
       billPeriod,
       { min: minHeight, max: maxHeight },

@@ -275,6 +275,7 @@ async function genSummaryByOrgReport(
   orgList,
   collapsedOrgInfo,
   rpPlans,
+  rpPlanDetails,
   monthYear,
   billPeriod,
   blockRange,
@@ -300,7 +301,7 @@ async function genSummaryByOrgReport(
     const ndidRows = allRows.rpNdid.filter(row =>
       row.rp_org_short_name === orgShortName);
     const rpNumOfStamps = _.sum(ndidRows.map(row => row.numberOfStamps));
-    const rpPlan = monthYear && getRpPlanOfOrg(rpPlans, orgShortName, monthYear);
+    const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, orgShortName, blockRange.min);
 
     const payToOrgShortNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
     const payToSummary = {

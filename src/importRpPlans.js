@@ -1,8 +1,7 @@
-const moment = require('moment');
 const { join } = require('path');
 const fs = require('fs');
 const { getDirectories } = require('./utils/pathUtil');
-const { getMonthYearDependentConfig, compareMonthYear } = require('./utils/configUtil');
+const { getHeightDependentConfig } = require('./utils/configUtil');
 
 
 const RP_PLAN_TYPE = {
@@ -10,78 +9,96 @@ const RP_PLAN_TYPE = {
   PREPAID: 'prepaid',
 };
 
-function importRpPlans(planDirPath) {
-  const yearDirPaths = getDirectories(planDirPath);
-  const years = yearDirPaths
-    .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
-    .sort((a, b) => a - b);
+function importRpPlans(planDirPath, rpPlanDetails, chainId, minBlockHeight, maxBlockHeight) {
+  const orgDirPaths = getDirectories(planDirPath);
+  const orgs = orgDirPaths
+    .map(dirPath => dirPath.substring(dirPath.lastIndexOf('/') + 1));
+  const result = {};
 
-  const monthYears = [];
-  const result = [];
-  for (let i = 0; i < years.length; i++) {
-    const year = years[i];
-    const yearDirPath = join(planDirPath, year.toString());
+  for (let i = 0; i < orgs.length; i++) {
+    result[orgs[i]] = [];
 
-    const monthDirPaths = getDirectories(yearDirPath);
-    const months = monthDirPaths
+    const orgDirPath = orgDirPaths[i];
+    const orgChainDirPath = join(orgDirPath, chainId);
+    const heightDirPaths = getDirectories(orgChainDirPath);
+    const minHeights = heightDirPaths
       .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
       .sort((a, b) => a - b);
 
-    for (let j = 0; j < months.length; j++) {
-      const month = months[j];
-      monthYears.push({
-        year,
-        month,
+    // Validate height
+    if (minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight).length > 0) {
+      throw new Error('Invalid RP plan config. Config height must not be in range (min_block_height, max_block_height].');
+    }
+
+    for (let j = 0; j < minHeights.length; j++) {
+      const minHeight = minHeights[j];
+      const maxHeight = minHeights[j + 1] ? minHeights[j + 1] - 1 : undefined;
+      const dirPath = join(orgChainDirPath, minHeight.toString());
+      const rpPlan = fs.readFileSync(join(dirPath, 'rpPlan.txt'), 'utf8');
+      const planDetail = getHeightDependentConfig(rpPlanDetails, minHeight, 'rp_plan_detail');
+
+      // Validate if RP plans aligns with plan detail
+      if (!planDetail[rpPlan]) {
+        throw new Error(`Unsupported RP plan (${rpPlan}) in ${join(dirPath, 'rpPlan.txt')}`);
+      }
+
+      result[orgs[i]].push({
+        min_block_height: minHeight,
+        max_block_height: maxHeight,
+        rp_plan: rpPlan,
       });
     }
   }
 
-  monthYears.sort(compareMonthYear);
+  return result;
+}
 
-  for (let i = 0; i < monthYears.length; i++) {
-    const minMonthYear = monthYears[i];
-    let maxMonthYear;
-    if (monthYears[i + 1]) {
-      const maxMonthYearMoment = moment(`${monthYears[i + 1].month}-${monthYears[i + 1].year}`, 'M-YYYY').subtract(1, 'months');
-      maxMonthYear = {
-        year: maxMonthYearMoment.year(),
-        month: maxMonthYearMoment.month() + 1,
-      };
-    }
+function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight) {
+  const heightDirPaths = getDirectories(planDetailDirPath);
+  const minHeights = heightDirPaths
+    .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
+    .sort((a, b) => a - b);
 
-    const dirPath = join(planDirPath, minMonthYear.year.toString(), minMonthYear.month.toString());
-    const rpPlans = JSON.parse(fs.readFileSync(join(dirPath, 'rpPlans.json'), 'utf8'));
-    const planDetail = JSON.parse(fs.readFileSync(join(dirPath, 'planDetail.json'), 'utf8'));
+  // Validate height
+  if (minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight).length > 0) {
+    throw new Error('Invalid RP plan detail config. Config height must not be in range (min_block_height, max_block_height].');
+  }
 
-    // Validate if RP plans aligns with plan detail
-    Object.values(rpPlans).forEach((planName) => {
-      if (!planDetail[planName]) {
-        throw new Error(`Unsupported RP plan (${planName}) in ${join(dirPath, 'rpPlans.json')}`);
-      }
-    });
+  const result = [];
+  for (let i = 0; i < minHeights.length; i++) {
+    const minHeight = minHeights[i];
+    const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
+    const dirPath = join(planDetailDirPath, minHeight.toString(), 'planDetail.json');
 
-    Object.keys(planDetail).forEach((planName) => {
-      planDetail[planName].name = planName;
+    const rpPlanDetail = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
+    Object.keys(rpPlanDetail).forEach((planName) => {
+      rpPlanDetail[planName].name = planName;
     });
 
     result.push({
-      min_month_year: minMonthYear,
-      max_month_year: maxMonthYear,
-      rp_plans: rpPlans,
-      plan_detail: planDetail,
-      default_plan: Object.keys(planDetail).find(planName => planDetail[planName].default),
+      min_block_height: minHeight,
+      max_block_height: maxHeight,
+      rp_plan_detail: rpPlanDetail,
     });
   }
 
   return result;
 }
 
-function getRpPlanOfOrg(rpPlans, org, monthYear) {
-  const scopedPlans = getMonthYearDependentConfig(rpPlans, monthYear);
-  const planName = scopedPlans.rp_plans[org] || scopedPlans.default_plan;
-  return scopedPlans.plan_detail[planName];
+function getRpPlanOfOrg(rpPlans, rpPlanDetails, org, height) {
+  const scopedPlanDetail = getHeightDependentConfig(rpPlanDetails, height, 'rp_plan_detail');
+  const planName = getHeightDependentConfig(rpPlans[org] || [], height, 'rp_plan');
+  return (scopedPlanDetail && planName && scopedPlanDetail[planName]) || {
+    steps: [
+      {
+        type: 'perStamp',
+        numberOfStamps: 0,
+        perStampRate: 0,
+      },
+    ],
+  };
 }
 
 module.exports = {
-  importRpPlans, getRpPlanOfOrg, RP_PLAN_TYPE,
+  importRpPlans, importRpPlanDetails, getRpPlanOfOrg, RP_PLAN_TYPE,
 };
