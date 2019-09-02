@@ -21,7 +21,6 @@ const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir')
 const { writeRoundFiles } = require('./src/writeRoundFiles');
 
 const INPUT_DATETIME_FORMAT = 'YYYYMMDDHHmmss';
-const INPUT_MONTHYEAR_FORMAT = 'M-YYYY';
 
 let chainId;
 let minHeight;
@@ -82,40 +81,17 @@ const createLatest = argv['create-latest'];
 
 const execDatetime = moment(process.env.EXEC_DATETIME, INPUT_DATETIME_FORMAT).toDate();
 
-let monthYear;
-const monthYearStr = argv.month; // e.g. 2-2017, 10-2018, 12-2019
-if (monthYearStr) {
-  const splittedMonthYearStr = monthYearStr.split('-');
-  if (splittedMonthYearStr.length === 2) {
-    const m = parseInt(splittedMonthYearStr[0], 10);
-    const y = parseInt(splittedMonthYearStr[1], 10);
-
-    if (m >= 1 && m <= 12 && y >= 1) {
-      monthYear = {
-        month: m,
-        year: y,
-      };
-    }
-  }
-}
-const monthlyMode = monthYear != null;
+let monthYear; // TODO: Remove monthYear from program
 
 let billPeriod = null;
-let billPeriodStart;
-let billPeriodEnd;
-if (monthlyMode) {
-  billPeriodStart = moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT).toDate();
-  billPeriodEnd = moment(`${monthYear.month}-${monthYear.year}`, INPUT_MONTHYEAR_FORMAT).add(1, 'months').toDate();
-} else {
-  const billPeriodStartStr = argv['bill-period-start'];
-  const billPeriodEndStr = argv['bill-period-end'];
-  billPeriodStart = billPeriodStartStr
-    ? moment(billPeriodStartStr, INPUT_DATETIME_FORMAT).toDate()
-    : null;
-  billPeriodEnd = billPeriodEndStr
-    ? moment(billPeriodEndStr, INPUT_DATETIME_FORMAT).toDate()
-    : null;
-}
+const billPeriodStartStr = argv['bill-period-start'];
+const billPeriodEndStr = argv['bill-period-end'];
+const billPeriodStart = billPeriodStartStr
+  ? moment(billPeriodStartStr, INPUT_DATETIME_FORMAT).toDate()
+  : null;
+const billPeriodEnd = billPeriodEndStr
+  ? moment(billPeriodEndStr, INPUT_DATETIME_FORMAT).toDate()
+  : null;
 
 if (
   billPeriodStart && !Number.isNaN(billPeriodStart.getTime()) &&
@@ -170,10 +146,6 @@ console.log(`Min block height: ${minHeight == null ? 'Not specific' : minHeight}
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.start : 'Not specific'}`);
 console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
-console.log(`Monthly mode: ${monthlyMode ? 'Yes' : 'No'}`);
-if (monthlyMode) {
-  console.log(`Month: ${monthYearStr || 'Not Specific'}`);
-}
 
 
 const debugFileDirPath = path.resolve(outputDirPath, './debug');
@@ -187,8 +159,6 @@ if (enableDebugFile) {
 fs.writeFile(
   path.join(outputDirPath, './info.txt'),
   `Execution datetime: ${moment(execDatetime).format('D-MMM-YYYY HH:mm:ss')} 
-Monthly mode: ${monthlyMode ? 'Yes' : 'No'}
-Month: ${monthlyMode ? monthYearStr : 'N/A'}
 Bill period start: ${moment(billPeriod.start).format('D-MMM-YYYY HH:mm:ss')}
 Bill period end: ${moment(billPeriod.end).format('D-MMM-YYYY HH:mm:ss')}
 Min block height: ${minHeight}
@@ -401,30 +371,16 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     console.log('\nWriting this-round files succeeded');
 
     if (nextRoundDirPath) {
-      if (monthlyMode) {
-        const nextMonthMoment = moment(`${monthYear.month}-${monthYear.year}`, 'M-YYYY').add(1, 'months');
-        writeRoundFiles(
-          chainId,
-          maxHeight + 1,
-          null,
-          billPeriod.end,
-          null,
-          { year: nextMonthMoment.year(), month: nextMonthMoment.month() + 1 },
-          pendingReqsJsonPath,
-          nextRoundDirPath,
-        );
-      } else {
-        writeRoundFiles(
-          chainId,
-          maxHeight + 1,
-          null,
-          billPeriod.end,
-          null,
-          null,
-          pendingReqsJsonPath,
-          nextRoundDirPath,
-        );
-      }
+      writeRoundFiles(
+        chainId,
+        maxHeight + 1,
+        null,
+        billPeriod.end,
+        null,
+        null,
+        pendingReqsJsonPath,
+        nextRoundDirPath,
+      );
       console.log('\nWriting next-round files succeeded');
     } else {
       console.log('\nWriting next-round files skipped');
