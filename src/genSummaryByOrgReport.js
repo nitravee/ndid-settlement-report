@@ -276,7 +276,6 @@ async function genSummaryByOrgReport(
   collapsedOrgInfo,
   rpPlans,
   rpPlanDetails,
-  monthYear,
   billPeriod,
   blockRange,
   version,
@@ -312,7 +311,7 @@ async function genSummaryByOrgReport(
             description: 'NDID Fee',
             ...calculateTablePayToItemSummaryInfo(
               ndidRows,
-              { rawTotal: monthYear ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 0 },
+              { rawTotal: calculateNdidPrice(rpPlan, rpNumOfStamps) },
             ),
           }],
         },

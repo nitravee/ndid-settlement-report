@@ -932,7 +932,6 @@ async function genCSV(
     collapsedOrgInfo,
     rpPlans,
     rpPlanDetails,
-    monthYear,
     billPeriod,
     blockRange,
     version,
