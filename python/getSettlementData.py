@@ -46,14 +46,14 @@ for height in range(start_block, end_block):
     if block['result']['block']['data']['txs'] is not None:
         index = 0
         for tx in block['result']['block']['data']['txs']:
-            chkTagSuccess = False
-            for tag in block_result['result']['results']['DeliverTx'][index][
-                    'tags']:
-                if base64.b64decode(
-                        tag['key']) == 'success' and base64.b64decode(
-                            tag['value']) == 'true':
-                    chkTagSuccess = True
-            if chkTagSuccess:
+            chkAttrSuccess = False
+            index2=0
+            for event in block_result['result']['results']['deliver_tx'][index]['events']:
+                for attr in block_result['result']['results']['deliver_tx'][index]['events'][index2]['attributes']:
+                    if base64.b64decode(attr['key']) == 'success' and base64.b64decode(attr['value']) == 'true':
+                        chkAttrSuccess = True
+                index2 += 1
+            if chkAttrSuccess:
 
                 txObj = tendermint_pb2.Tx()
                 decodedTx = base64.b64decode(tx)
@@ -66,10 +66,8 @@ for height in range(start_block, end_block):
 
                 row = {}
                 row['method'] = method
-                if 'data' in block_result['result']['results']['DeliverTx'][
-                        index]:
-                    row['request_id'] = base64.b64decode(block_result[
-                        'result']['results']['DeliverTx'][index]['data'])
+                if 'data' in block_result['result']['results']['deliver_tx'][index]:
+                    row['request_id'] = base64.b64decode(block_result['result']['results']['deliver_tx'][index]['data'])
 
                 func = 'GetPriceFunc'
                 param = {}
