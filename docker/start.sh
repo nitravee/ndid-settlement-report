@@ -28,6 +28,7 @@ node ./settlement-report/genSettlementReport \
   -d ./RequestDetail/ \
   -p ./Prices/ \
   -n ./Plan/ \
+  -t ./PlanDetail/ \
   -g ./Group/ \
   -v ./pendingRequests.json \
   -c "${CHAIN_ID}" \
