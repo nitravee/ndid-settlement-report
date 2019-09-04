@@ -26,19 +26,21 @@ function importRpPlans(planDirPath, rpPlanDetails, chainId, minBlockHeight, maxB
       .sort((a, b) => a - b);
 
     // Validate height
-    if (minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight).length > 0) {
-      throw new Error('Invalid RP plan config. Config height must not be in range (min_block_height, max_block_height].');
+    const outOfRangeMinHeights = minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight);
+    if (outOfRangeMinHeights.length > 0) {
+      throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
     }
 
     for (let j = 0; j < minHeights.length; j++) {
       const minHeight = minHeights[j];
       const maxHeight = minHeights[j + 1] ? minHeights[j + 1] - 1 : undefined;
       const dirPath = join(orgChainDirPath, minHeight.toString());
-      const rpPlan = fs.readFileSync(join(dirPath, 'rpPlan.txt'), 'utf8');
+      const rpPlan = fs.readFileSync(join(dirPath, 'rpPlan.txt'), 'utf8').trim();
       const planDetail = getHeightDependentConfig(rpPlanDetails, minHeight, 'rp_plan_detail');
 
       // Validate if RP plans aligns with plan detail
       if (!planDetail[rpPlan]) {
+        console.error(`RP plan (${rpPlan}) not found in RP plan detail`, planDetail);
         throw new Error(`Unsupported RP plan (${rpPlan}) in ${join(dirPath, 'rpPlan.txt')}`);
       }
 
