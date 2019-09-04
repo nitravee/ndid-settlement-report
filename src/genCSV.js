@@ -211,11 +211,27 @@ function getNodeList(allRows) {
     }
   });
   allRows.rpAs.forEach((item) => {
+    if (!rpList.find(node => node.id === item.rp_id)) {
+      rpList.push({
+        id: item.rp_id,
+        org: getOrgInfo(item.rp_name_obj),
+        org_short_name: item.rp_org_short_name,
+      });
+    }
     if (!asList.find(node => node.id === item.as_id)) {
       asList.push({
         id: item.as_id,
         org: getOrgInfo(item.as_name_obj),
         org_short_name: item.as_org_short_name,
+      });
+    }
+  });
+  allRows.rpNdid.forEach((item) => {
+    if (!rpList.find(node => node.id === item.rp_id)) {
+      rpList.push({
+        id: item.rp_id,
+        org: getOrgInfo(item.rp_name_obj),
+        org_short_name: item.rp_org_short_name,
       });
     }
   });
@@ -365,13 +381,11 @@ function genSummaryRpNdid(
 
 async function genCSV(
   settlementWithPrice,
-  pendingRequests,
   nodeInfo,
   orgInfo,
   allPriceCategories,
   rpPlans,
   rpPlanDetails,
-  monthYear,
   billPeriod,
   blockRange,
   version,
@@ -385,10 +399,15 @@ async function genCSV(
     version,
   };
 
-  const { finishedRequests } = settlementWithPrice;
+  const { finishedRequests, pendingRequests } = settlementWithPrice;
 
-  const allReqIds = Object.keys(finishedRequests);
-  const allRows = allReqIds
+  const allPendingReqIds = Object.keys(pendingRequests);
+  const allPendingRpNdidRowsToCalculateNdidFee = allPendingReqIds
+    .map(reqId => genRowsFromRequest(pendingRequests[reqId], nodeInfo))
+    .reduce((prev, curr) => prev.concat(curr.rpNdid), []);
+
+  const allFinishedReqIds = Object.keys(finishedRequests);
+  const allRows = allFinishedReqIds
     .map(reqId => genRowsFromRequest(finishedRequests[reqId], nodeInfo))
     .reduce((prev, curr) => ({
       rpIdp: prev.rpIdp.concat(curr.rpIdp),
@@ -397,16 +416,16 @@ async function genCSV(
     }), {
       rpIdp: [],
       rpAs: [],
-      rpNdid: [],
+      rpNdid: allPendingRpNdidRowsToCalculateNdidFee,
     });
-  const nodeList = getNodeList(allRows);
+  allRows.rpNdid.sort(heightCompare);
 
+  const nodeList = getNodeList(allRows);
   const collapsedOrgInfo = getCollapsedOrgInfoInRange(orgInfo, blockRange.min, blockRange.max);
   const orgShortNameList = getOrgShortNameList(collapsedOrgInfo);
 
   orgShortNameList.allList.forEach(orgName => mkpath.sync(`csv/${orgName}`));
 
-  const allPendingReqIds = Object.keys(pendingRequests);
   const allPendingReqRows = allPendingReqIds
     .map(reqId => genRowsFromPendingRequest(pendingRequests[reqId], nodeInfo))
     .reduce((prev, curr) => prev.concat(curr), [])
@@ -418,7 +437,7 @@ async function genCSV(
   // Pending by Org
   // #################################
   orgShortNameList.allList.forEach((orgName) => {
-    const orgPendingReqs = getOrgRelatedReqs(Object.values(pendingRequests), nodeList, orgName);
+    const orgPendingReqs = getOrgRelatedReqs(Object.values(pendingRequests), orgName);
     const orgPendingReqRows = orgPendingReqs
       .map(req => genRowsFromPendingRequest(req, nodeInfo))
       .reduce((prev, curr) => prev.concat(curr), [])
@@ -439,6 +458,9 @@ async function genCSV(
     logFileCreated(fileNameWithExt, destDirPath);
   });
 
+  // #################################
+  // RP-Related Summaries
+  // #################################
   nodeList.rpList.forEach(({ id, org_short_name: orgShortName }) => {
     const rpIdp = [];
     allRows.rpIdp.forEach((row) => {

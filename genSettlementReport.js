@@ -327,13 +327,11 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     const outputCsvDirPath = path.join(outputDirPath, 'csv');
     await genCSV(
       settlementWithPrice,
-      categorizedReqs.pendingRequests,
       nodeInfo,
       orgInfo,
       priceCategories,
       rpPlans,
       rpPlanDetails,
-      monthYear,
       billPeriod,
       { min: minHeight, max: maxHeight },
       ver,
