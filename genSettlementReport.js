@@ -19,6 +19,7 @@ const { getNodeIdsFromSettlements } = require('./src/utils/requestUtil');
 const { reportExecRoundDirName } = require('./src/utils/pathUtil');
 const { copyReportsToWebPortalDir } = require('./src/copyReportsToWebPortalDir');
 const { writeRoundFiles } = require('./src/writeRoundFiles');
+const { CONFIG_HEIGHT_TIMESTAMP_FORMAT } = require('./src/utils/configUtil');
 
 const INPUT_DATETIME_FORMAT = 'YYYYMMDDHHmmss';
 
@@ -80,6 +81,11 @@ const webPortalSubDirs = argv['portal-sub-dir']
 const createLatest = argv['create-latest'];
 
 const execDatetime = moment(process.env.EXEC_DATETIME, INPUT_DATETIME_FORMAT).toDate();
+
+const configTimestampStr = argv['config-timestamp'];
+const configTimestamp = configTimestampStr
+  ? moment(configTimestampStr, CONFIG_HEIGHT_TIMESTAMP_FORMAT).toDate()
+  : undefined;
 
 let monthYear; // TODO: Remove monthYear from program
 
@@ -146,6 +152,7 @@ console.log(`Min block height: ${minHeight == null ? 'Not specific' : minHeight}
 console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}`);
 console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.start : 'Not specific'}`);
 console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
+console.log(`Config timestamp: ${configTimestamp || 'Not specific'}`);
 
 
 const debugFileDirPath = path.resolve(outputDirPath, './debug');
@@ -213,6 +220,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       path.join(planDetailDirPath, chainId),
       minHeight,
       maxHeight,
+      configTimestamp,
     );
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
@@ -222,7 +230,8 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const rpPlans = importRpPlans(planDirPath, rpPlanDetails, chainId, minHeight, maxHeight);
+    const rpPlans =
+      importRpPlans(planDirPath, rpPlanDetails, chainId, minHeight, maxHeight, configTimestamp);
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
         if (err) {

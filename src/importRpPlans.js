@@ -1,15 +1,29 @@
 const { join } = require('path');
 const fs = require('fs');
+const moment = require('moment');
 const { getDirectories } = require('./utils/pathUtil');
-const { getHeightDependentConfig } = require('./utils/configUtil');
-
+const {
+  getHeightDependentConfig,
+  getConfigHeight,
+  compareConfigHeight,
+  groupConfigHeightsByHeight,
+  selectConfigHeightByTimestamp,
+  CONFIG_HEIGHT_TIMESTAMP_FORMAT,
+} = require('./utils/configUtil');
 
 const RP_PLAN_TYPE = {
   PER_STAMP: 'perStamp',
   PREPAID: 'prepaid',
 };
 
-function importRpPlans(planDirPath, rpPlanDetails, chainId, minBlockHeight, maxBlockHeight) {
+function importRpPlans(
+  planDirPath,
+  rpPlanDetails,
+  chainId,
+  minBlockHeight,
+  maxBlockHeight,
+  configTimestamp,
+) {
   const orgDirPaths = getDirectories(planDirPath);
   const orgs = orgDirPaths
     .map(dirPath => dirPath.substring(dirPath.lastIndexOf('/') + 1));
@@ -21,20 +35,35 @@ function importRpPlans(planDirPath, rpPlanDetails, chainId, minBlockHeight, maxB
     const orgDirPath = orgDirPaths[i];
     const orgChainDirPath = join(orgDirPath, chainId);
     const heightDirPaths = getDirectories(orgChainDirPath);
-    const minHeights = heightDirPaths
-      .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
-      .sort((a, b) => a - b);
+    const minConfigHeights = heightDirPaths
+      .map(dirPath => getConfigHeight(dirPath.substring(dirPath.lastIndexOf('/') + 1)))
+      .sort(compareConfigHeight);
 
     // Validate height
-    const outOfRangeMinHeights = minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight);
+    const outOfRangeMinHeights = minConfigHeights
+      .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
     if (outOfRangeMinHeights.length > 0) {
       throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
     }
 
-    for (let j = 0; j < minHeights.length; j++) {
-      const minHeight = minHeights[j];
-      const maxHeight = minHeights[j + 1] ? minHeights[j + 1] - 1 : undefined;
-      const dirPath = join(orgChainDirPath, minHeight.toString());
+    // Filter with config timestamp
+    const filteredMinConfigHeights = [];
+    const minConfigHeightsGroupByHeight = groupConfigHeightsByHeight(minConfigHeights);
+    Object.keys(minConfigHeightsGroupByHeight).sort((a, b) => a - b).forEach((h) => {
+      filteredMinConfigHeights
+        .push(selectConfigHeightByTimestamp(minConfigHeightsGroupByHeight[h], configTimestamp));
+    });
+
+    for (let j = 0; j < filteredMinConfigHeights.length; j++) {
+      const minConfHeight = filteredMinConfigHeights[j];
+      const minHeight = minConfHeight.height;
+      const maxHeight = filteredMinConfigHeights[j + 1]
+        ? filteredMinConfigHeights[j + 1].height - 1 : undefined;
+      let folderName = minHeight.toString();
+      if (minConfHeight.timestamp && !isNaN(minConfHeight.timestamp)) {
+        folderName += `_${moment(minConfHeight.timestamp).format(CONFIG_HEIGHT_TIMESTAMP_FORMAT)}`;
+      }
+      const dirPath = join(orgChainDirPath, folderName);
       const rpPlan = fs.readFileSync(join(dirPath, 'rpPlan.txt'), 'utf8').trim();
       const planDetail = getHeightDependentConfig(rpPlanDetails, minHeight, 'rp_plan_detail');
 
@@ -55,22 +84,38 @@ function importRpPlans(planDirPath, rpPlanDetails, chainId, minBlockHeight, maxB
   return result;
 }
 
-function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight) {
+function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight, configTimestamp) {
   const heightDirPaths = getDirectories(planDetailDirPath);
-  const minHeights = heightDirPaths
-    .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
-    .sort((a, b) => a - b);
+  const minConfigHeights = heightDirPaths
+    .map(dirPath => getConfigHeight(dirPath.substring(dirPath.lastIndexOf('/') + 1)))
+    .sort(compareConfigHeight);
 
   // Validate height
-  if (minHeights.filter(h => h > minBlockHeight && h <= maxBlockHeight).length > 0) {
-    throw new Error('Invalid RP plan detail config. Config height must not be in range (min_block_height, max_block_height].');
+  const outOfRangeMinHeights = minConfigHeights
+    .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
+  if (outOfRangeMinHeights.length > 0) {
+    throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
   }
 
+  // Filter with config timestamp
+  const filteredMinConfigHeights = [];
+  const minConfigHeightsGroupByHeight = groupConfigHeightsByHeight(minConfigHeights);
+  Object.keys(minConfigHeightsGroupByHeight).sort((a, b) => a - b).forEach((h) => {
+    filteredMinConfigHeights
+      .push(selectConfigHeightByTimestamp(minConfigHeightsGroupByHeight[h], configTimestamp));
+  });
+
   const result = [];
-  for (let i = 0; i < minHeights.length; i++) {
-    const minHeight = minHeights[i];
-    const maxHeight = minHeights[i + 1] ? minHeights[i + 1] - 1 : undefined;
-    const dirPath = join(planDetailDirPath, minHeight.toString(), 'planDetail.json');
+  for (let i = 0; i < filteredMinConfigHeights.length; i++) {
+    const minConfHeight = filteredMinConfigHeights[i];
+    const minHeight = minConfHeight.height;
+    const maxHeight = filteredMinConfigHeights[i + 1]
+      ? filteredMinConfigHeights[i + 1].height - 1 : undefined;
+    let folderName = minHeight.toString();
+    if (minConfHeight.timestamp && !isNaN(minConfHeight.timestamp)) {
+      folderName += `_${moment(minConfHeight.timestamp).format(CONFIG_HEIGHT_TIMESTAMP_FORMAT)}`;
+    }
+    const dirPath = join(planDetailDirPath, folderName, 'planDetail.json');
 
     const rpPlanDetail = JSON.parse(fs.readFileSync(dirPath, 'utf8'));
     Object.keys(rpPlanDetail).forEach((planName) => {

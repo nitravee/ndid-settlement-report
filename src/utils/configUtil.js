@@ -1,3 +1,7 @@
+const moment = require('moment');
+
+const CONFIG_HEIGHT_TIMESTAMP_FORMAT = 'YYYYMMDDHHmmss';
+
 function getHeightDependentConfig(configList, height, configKey) {
   const filteredList = configList
     .filter(entry => height >= entry.min_block_height
@@ -35,4 +39,83 @@ function getMonthYearDependentConfig(configList, monthYear, configKey) {
   return configKey ? filteredList[0][configKey] : filteredList[0];
 }
 
-module.exports = { getHeightDependentConfig, getMonthYearDependentConfig, compareMonthYear };
+function getConfigHeight(heightFolderName = '') {
+  const splitted = heightFolderName.split('_');
+
+  return {
+    height: parseInt(splitted[0], 10),
+    timestamp:
+      splitted[1] ? moment(splitted[1], CONFIG_HEIGHT_TIMESTAMP_FORMAT).toDate() : undefined,
+  };
+}
+
+function compareConfigHeight(a, b) {
+  if (a.height !== b.height) {
+    if (a.height == null) {
+      return -1;
+    }
+    if (b.height == null) {
+      return 1;
+    }
+    return a.height - b.height;
+  }
+
+  return a.timestamp - b.timestamp;
+}
+
+function groupConfigHeightsByHeight(configHeights) {
+  const heightMap = {};
+  configHeights.forEach((confHeight) => {
+    if (heightMap[confHeight.height]) {
+      heightMap[confHeight.height].push(confHeight);
+    } else {
+      heightMap[confHeight.height] = [confHeight];
+    }
+  });
+
+  Object.keys(heightMap).forEach((h) => {
+    heightMap[h].sort(compareConfigHeight);
+  });
+
+  return heightMap;
+}
+
+function selectConfigHeightByTimestamp(sortedConfigHeights = [], configTimestamp) {
+  if (sortedConfigHeights.length === 0) {
+    return undefined;
+  }
+
+  if (configTimestamp == null || isNaN(configTimestamp)) {
+    return sortedConfigHeights[0];
+  }
+
+  for (let i = 0; i < sortedConfigHeights.length; i++) {
+    const currConfHeightTimestamp =
+      sortedConfigHeights[i] && sortedConfigHeights[i].timestamp;
+    const nextConfHeightTimestamp =
+      sortedConfigHeights[i + 1] && sortedConfigHeights[i + 1].timestamp;
+    if (
+      (!currConfHeightTimestamp
+        || isNaN(currConfHeightTimestamp)
+        || configTimestamp.getTime() >= currConfHeightTimestamp.getTime())
+      && (!nextConfHeightTimestamp
+        || isNaN(nextConfHeightTimestamp)
+        || configTimestamp.getTime() < nextConfHeightTimestamp.getTime())
+    ) {
+      return sortedConfigHeights[i];
+    }
+  }
+
+  return sortedConfigHeights[0];
+}
+
+module.exports = {
+  getHeightDependentConfig,
+  getMonthYearDependentConfig,
+  compareMonthYear,
+  getConfigHeight,
+  compareConfigHeight,
+  groupConfigHeightsByHeight,
+  selectConfigHeightByTimestamp,
+  CONFIG_HEIGHT_TIMESTAMP_FORMAT,
+};

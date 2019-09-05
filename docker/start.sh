@@ -37,6 +37,7 @@ node ./settlement-report/genSettlementReport \
   -o ./Reports \
   -w ./WebPortal \
   --month="${MONTH}" \
+  --config-timestamp=$CONFIG_TIMESTAMP \
   --bill-period-start="${BILL_PERIOD_START}" \
   --bill-period-end="${BILL_PERIOD_END}" \
   --tm-rpc-ip=$TM_RPC_IP \
