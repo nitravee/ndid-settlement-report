@@ -87,8 +87,6 @@ const configTimestamp = configTimestampStr
   ? moment(configTimestampStr, CONFIG_HEIGHT_TIMESTAMP_FORMAT).toDate()
   : undefined;
 
-let monthYear; // TODO: Remove monthYear from program
-
 let billPeriod = null;
 const billPeriodStartStr = argv['bill-period-start'];
 const billPeriodEndStr = argv['bill-period-end'];
@@ -368,7 +366,6 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       maxHeight,
       billPeriod.start,
       billPeriod.end,
-      monthYear,
       prevPendingReqsPath,
       thisRoundDirPath,
       {
@@ -383,7 +380,6 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
         maxHeight + 1,
         null,
         billPeriod.end,
-        null,
         null,
         pendingReqsJsonPath,
         nextRoundDirPath,

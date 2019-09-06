@@ -10,7 +10,6 @@ function writeRoundInfoJson(
   maxBlockHeight,
   billPeriodStart,
   billPeriodEnd,
-  monthYear,
   jsonFilePath,
 ) {
   const nextRound = {};
@@ -35,10 +34,6 @@ function writeRoundInfoJson(
     nextRound.bill_period_end = moment(billPeriodEnd).format('YYYYMMDDHHmmss');
   }
 
-  if (monthYear != null) {
-    nextRound.month = `${monthYear.month}-${monthYear.year}`;
-  }
-
   fs.writeFileSync(jsonFilePath, JSON.stringify(nextRound, null, 2));
 }
 
@@ -48,7 +43,6 @@ function writeRoundFiles(
   maxBlockHeight,
   billPeriodStart,
   billPeriodEnd,
-  monthYear,
   srcPendingReqsFilePath,
   roundDirPath,
   options = {},
@@ -65,7 +59,6 @@ function writeRoundFiles(
     maxBlockHeight,
     billPeriodStart,
     billPeriodEnd,
-    monthYear,
     path.join(roundDirPath, outputRoundInfoJsonFileName),
   );
   if (fs.existsSync(srcPendingReqsFilePath) && fs.lstatSync(srcPendingReqsFilePath).isFile()) {
