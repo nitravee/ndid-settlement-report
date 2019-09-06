@@ -128,9 +128,10 @@ for node_id in final_result:
         outfile.write(json.dumps(usedToken, indent=2))
         outfile.close()
 
+    detailQueriedReqIds = {}
     for item in usedToken:
-        if (item['method'] == 'CreateRequest'):
-            
+        if item['request_id'] not in detailQueriedReqIds:
+
             func = 'GetRequestDetail'
             param = {}
             param['request_id'] = item['request_id']
@@ -152,3 +153,4 @@ for node_id in final_result:
                     'w') as outfile:
                 outfile.write(json.dumps(requestDetail, indent=2))
                 outfile.close()
+            detailQueriedReqIds[item['request_id']] = True
