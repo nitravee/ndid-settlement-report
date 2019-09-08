@@ -60,7 +60,17 @@ function compareConfigHeight(a, b) {
     return a.height - b.height;
   }
 
-  return a.timestamp - b.timestamp;
+  if (isNaN(a.timestamp) && isNaN(b.timestamp)) {
+    return 0;
+  }
+  if (!a.timestamp || isNaN(a.timestamp)) {
+    return -1;
+  }
+  if (!b.timestamp || isNaN(b.timestamp)) {
+    return 1;
+  }
+
+  return a.timestamp.getTime() - b.timestamp.getTime();
 }
 
 function groupConfigHeightsByHeight(configHeights) {

@@ -77,6 +77,7 @@ function importRpPlans(
       result[orgs[i]].push({
         min_block_height: minHeight,
         max_block_height: maxHeight,
+        min_block_height_timestamp: minConfHeight.timestamp,
         rp_plan: rpPlan,
       });
     }
@@ -127,6 +128,7 @@ function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight, 
     result.push({
       min_block_height: minHeight,
       max_block_height: maxHeight,
+      min_block_height_timestamp: minConfHeight.timestamp,
       rp_plan_detail: rpPlanDetail,
     });
   }
