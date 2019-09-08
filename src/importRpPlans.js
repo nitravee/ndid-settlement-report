@@ -37,6 +37,7 @@ function importRpPlans(
     const heightDirPaths = getDirectories(orgChainDirPath);
     const minConfigHeights = heightDirPaths
       .map(dirPath => getConfigHeight(dirPath.substring(dirPath.lastIndexOf('/') + 1)))
+      .filter(confHeight => isFinite(confHeight.height))
       .sort(compareConfigHeight);
 
     // Validate height
@@ -88,6 +89,7 @@ function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight, 
   const heightDirPaths = getDirectories(planDetailDirPath);
   const minConfigHeights = heightDirPaths
     .map(dirPath => getConfigHeight(dirPath.substring(dirPath.lastIndexOf('/') + 1)))
+    .filter(confHeight => isFinite(confHeight.height))
     .sort(compareConfigHeight);
 
   // Validate height

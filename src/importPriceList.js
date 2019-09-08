@@ -112,6 +112,7 @@ async function importPriceListDirectories(rootPriceDirPath) {
   const heightDirPaths = getDirectories(rootPriceDirPath);
   const minHeights = heightDirPaths
     .map(dirPath => parseInt(dirPath.substring(dirPath.lastIndexOf('/') + 1), 10))
+    .filter(h => isFinite(h))
     .sort((a, b) => a - b);
 
   const result = {
