@@ -66,6 +66,12 @@ for height in range(start_block, end_block):
 
                 row = {}
                 row['method'] = method
+                
+                if method == 'SetDataReceived':                    
+                    txParams = json.loads(txObj.params)
+                    if 'as_id' in txParams:
+                        row['as_id'] = txParams['as_id']
+
                 if 'data' in block_result['result']['results']['deliver_tx'][index]:
                     row['request_id'] = base64.b64decode(block_result['result']['results']['deliver_tx'][index]['data'])
 
