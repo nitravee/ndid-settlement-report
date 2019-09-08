@@ -2,7 +2,7 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, minBlockHeight, maxBlockHeight) {
+function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath) {
   const tokenReport = glob.sync(path.join(usedTokenReportDirPath, '*.json'));
   const data = {};
   tokenReport.forEach((file) => {
@@ -10,7 +10,7 @@ function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, min
     const blocks = JSON.parse(fs.readFileSync(file));
     blocks.forEach((block) => {
       if (block.hasOwnProperty('request_id')) {
-        const { height, method, request_id: reqId } = block;
+        const { height, method, request_id: reqId, as_id: asId, service_id: serviceId } = block;
 
         if (!data[reqId]) {
           data[reqId] = {
@@ -18,11 +18,20 @@ function importBlockchainQueryData(usedTokenReportDirPath, reqDetailDirPath, min
           };
         }
 
-        data[reqId].steps.push({
+        const step = {
           height,
           method,
           nodeId: filename,
-        });
+        };
+
+        if (asId) {
+          step.asId = asId;
+        }
+        if (serviceId) {
+          step.serviceId = serviceId;
+        }
+
+        data[reqId].steps.push(step);
       }
     });
   });

@@ -269,7 +269,6 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
         delete reqData[reqId];
       }
     });
-
     console.log('Importing blockchain query data succeeded.');
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './mergedReqData.json'), JSON.stringify(reqData, null, 2), (err) => {
