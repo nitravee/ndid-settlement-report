@@ -139,27 +139,28 @@ for node_id in final_result:
 
     detailQueriedReqIds = {}
     for item in usedToken:
-        if item['request_id'] not in detailQueriedReqIds:
+        if 'request_id' in item:
+            if item['request_id'] not in detailQueriedReqIds:
 
-            func = 'GetRequestDetail'
-            param = {}
-            param['request_id'] = item['request_id']
-            json_param = json.dumps(param)
-            queryObj = tendermint_pb2.Query()
-            queryObj.method = func
-            queryObj.params = json_param
-            data = '0x' + queryObj.SerializeToString().encode(
-                "utf-8").encode("hex")
-            params = urllib.urlencode({'data': data})
-            req = urllib2.urlopen('http://' + tm_rpc_domain + '/abci_query?' +
-                                    params)
-            json_result = req.read()
-            result = json.loads(json_result)
-            data = base64.b64decode(result['result']['response']['value'])
-            requestDetail = json.loads(data)
-            with open(
-                    os.path.join(dirRequest, item['request_id'] + '.json'),
-                    'w') as outfile:
-                outfile.write(json.dumps(requestDetail, indent=2))
-                outfile.close()
-            detailQueriedReqIds[item['request_id']] = True
+                func = 'GetRequestDetail'
+                param = {}
+                param['request_id'] = item['request_id']
+                json_param = json.dumps(param)
+                queryObj = tendermint_pb2.Query()
+                queryObj.method = func
+                queryObj.params = json_param
+                data = '0x' + queryObj.SerializeToString().encode(
+                    "utf-8").encode("hex")
+                params = urllib.urlencode({'data': data})
+                req = urllib2.urlopen('http://' + tm_rpc_domain + '/abci_query?' +
+                                        params)
+                json_result = req.read()
+                result = json.loads(json_result)
+                data = base64.b64decode(result['result']['response']['value'])
+                requestDetail = json.loads(data)
+                with open(
+                        os.path.join(dirRequest, item['request_id'] + '.json'),
+                        'w') as outfile:
+                    outfile.write(json.dumps(requestDetail, indent=2))
+                    outfile.close()
+                detailQueriedReqIds[item['request_id']] = True

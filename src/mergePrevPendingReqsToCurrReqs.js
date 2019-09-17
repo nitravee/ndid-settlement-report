@@ -1,6 +1,10 @@
 const _ = require('lodash');
 
 function reconcileRequestDetail(reqDetail, steps) {
+  if (!reqDetail || !steps) {
+    return null;
+  }
+
   const { response_list, data_request_list } = reqDetail;
   const reconciledReqDetail = _.cloneDeep(reqDetail);
 
