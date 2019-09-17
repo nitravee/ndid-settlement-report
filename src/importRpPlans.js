@@ -23,10 +23,19 @@ function importRpPlans(
   minBlockHeight,
   maxBlockHeight,
   configTimestamp,
+  mktNameToWebPortalOrgDirNameMapping,
 ) {
+  const portalOrgDirNameToMktNameMapping = Object
+    .keys(mktNameToWebPortalOrgDirNameMapping)
+    .reduce((prev, mktName) => {
+      const portalOrgDirName = mktNameToWebPortalOrgDirNameMapping[mktName]
+      prev[portalOrgDirName] = mktName;
+      return prev;
+    }, {});
   const orgDirPaths = getDirectories(planDirPath);
   const orgs = orgDirPaths
-    .map(dirPath => dirPath.substring(dirPath.lastIndexOf('/') + 1));
+    .map(dirPath =>
+      portalOrgDirNameToMktNameMapping[dirPath.substring(dirPath.lastIndexOf('/') + 1)]);
   const result = {};
 
   for (let i = 0; i < orgs.length; i++) {

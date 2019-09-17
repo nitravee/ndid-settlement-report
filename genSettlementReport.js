@@ -229,7 +229,15 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
     }
 
     const rpPlans =
-      importRpPlans(planDirPath, rpPlanDetails, chainId, minHeight, maxHeight, configTimestamp);
+      importRpPlans(
+        planDirPath,
+        rpPlanDetails,
+        chainId,
+        minHeight,
+        maxHeight,
+        configTimestamp,
+        config.mktNameToWebPortalOrgDirNameMapping,
+      );
     if (enableDebugFile) {
       fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
         if (err) {
