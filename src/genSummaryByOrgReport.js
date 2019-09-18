@@ -279,6 +279,7 @@ async function genSummaryByOrgReport(
   billPeriod,
   blockRange,
   version,
+  shouldCalculateNdidFee,
   outputCsvDirPath,
 ) {
   const orgShortNames = _.uniq([...orgList.rpList, ...orgList.idpList, ...orgList.asList]);
@@ -297,24 +298,10 @@ async function genSummaryByOrgReport(
         row.rp_org_short_name === orgShortName),
       row => row.as_org_short_name,
     );
-    const ndidRows = allRows.rpNdid.filter(row =>
-      row.rp_org_short_name === orgShortName);
-    const rpNumOfStamps = _.sum(ndidRows.map(row => row.numberOfStamps));
-    const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, orgShortName, blockRange.min);
 
     const payToOrgShortNames = _.uniq([...Object.keys(rpIdpRows), ...Object.keys(rpAsRows)]);
     const payToSummary = {
       members: [
-        {
-          memberName: 'NDID',
-          items: [{
-            description: 'NDID Fee',
-            ...calculateTablePayToItemSummaryInfo(
-              ndidRows,
-              { rawTotal: calculateNdidPrice(rpPlan, rpNumOfStamps) },
-            ),
-          }],
-        },
         ...payToOrgShortNames
           .map((payeeOrgShortName) => {
             const items = [];
@@ -341,6 +328,28 @@ async function genSummaryByOrgReport(
           }),
       ],
     };
+
+    if (shouldCalculateNdidFee) {
+      const ndidRows = allRows.rpNdid.filter(row =>
+        row.rp_org_short_name === orgShortName);
+      const rpNumOfStamps = _.sum(ndidRows.map(row => row.numberOfStamps));
+      const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, orgShortName, blockRange.min);
+
+      payToSummary.members = [
+        {
+          memberName: 'NDID',
+          items: [{
+            description: 'NDID Fee',
+            ...calculateTablePayToItemSummaryInfo(
+              ndidRows,
+              { rawTotal: calculateNdidPrice(rpPlan, rpNumOfStamps) },
+            ),
+          }],
+        },
+        ...payToSummary.members,
+      ];
+    }
+
     payToSummary.total = {
       unit: _.sumBy(_
         .flatten(payToSummary.members.map(member => member.items)).map(item => item.unit)),

@@ -107,6 +107,8 @@ if (
   };
 }
 
+const shouldCalculateNdidFee = argv['ndid-fee'] === 'true';
+
 const enableDebugFile = argv['debug-file'];
 const nodeInfoJsonFilePath = argv['node-info-json'];
 
@@ -151,6 +153,7 @@ console.log(`Max block height: ${maxHeight == null ? 'Not specific' : maxHeight}
 console.log(`Bill period start: ${billPeriod && billPeriod.start ? billPeriod.start : 'Not specific'}`);
 console.log(`Bill period end: ${billPeriod && billPeriod.end ? billPeriod.end : 'Not specific'}`);
 console.log(`Config timestamp: ${configTimestamp || 'Not specific'}`);
+console.log(`Calculate NDID fee: ${shouldCalculateNdidFee ? 'Yes' : 'No'}`);
 
 
 const debugFileDirPath = path.resolve(outputDirPath, './debug');
@@ -214,36 +217,44 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       });
     }
 
-    const rpPlanDetails = importRpPlanDetails(
-      path.join(planDetailDirPath, chainId),
-      minHeight,
-      maxHeight,
-      configTimestamp,
-    );
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: rpPlanDetails.json', err);
-        }
-      });
-    }
-
-    const rpPlans =
-      importRpPlans(
-        planDirPath,
-        rpPlanDetails,
-        chainId,
+    let rpPlanDetails;
+    if (shouldCalculateNdidFee) {
+      rpPlanDetails = importRpPlanDetails(
+        path.join(planDetailDirPath, chainId),
         minHeight,
         maxHeight,
         configTimestamp,
-        config.mktNameToWebPortalOrgDirNameMapping,
       );
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: rpPlans.json', err);
-        }
-      });
+      console.log('Importing RP plan details succeeded.');
+      if (enableDebugFile) {
+        fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
+          if (err) {
+            console.warn('Failed to write debug file: rpPlanDetails.json', err);
+          }
+        });
+      }
+    }
+
+    let rpPlans;
+    if (shouldCalculateNdidFee) {
+      rpPlans =
+        importRpPlans(
+          planDirPath,
+          rpPlanDetails,
+          chainId,
+          minHeight,
+          maxHeight,
+          configTimestamp,
+          config.mktNameToWebPortalOrgDirNameMapping,
+        );
+      console.log('Importing RP plans succeeded.');
+      if (enableDebugFile) {
+        fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
+          if (err) {
+            console.warn('Failed to write debug file: rpPlans.json', err);
+          }
+        });
+      }
     }
 
     const prevPendingReqs = importPreviousPendingRequests(prevPendingReqsPath);
@@ -349,6 +360,7 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
       billPeriod,
       { min: minHeight, max: maxHeight },
       ver,
+      shouldCalculateNdidFee,
       outputCsvDirPath,
     );
     console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);

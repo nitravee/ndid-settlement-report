@@ -7,7 +7,8 @@ MIN_BLOCK_HEIGHT=${MIN_BLOCK_HEIGHT}
 MAX_BLOCK_HEIGHT=${MAX_BLOCK_HEIGHT}
 DEBUG_FILE=${DEBUG_FILE:-NO}
 
-if [ "${QUERY_SETTLEMENT}" = "YES" ]
+
+if [ "${QUERY_SETTLEMENT}" == "YES" ]
 then  
   printf 'Started querying blockchain.'
   TM_RPC_IP=$TM_RPC_IP TM_RPC_PORT=$TM_RPC_PORT python ./settlement-query/getSettlementData.py
@@ -16,11 +17,18 @@ else
   printf 'Skipped querying blockchain.\n'
 fi
 
-if [ "${DEBUG_FILE}" = "YES"]
+if [ "${DEBUG_FILE}" == "YES" ]
 then
   CREATE_DEBUG_FILE=true
 else
   CREATE_DEBUG_FILE=false
+fi
+
+if [ "${NDID_FEE}" == "YES" ]
+then
+  CAL_NDID_FEE=true  
+else
+  CAL_NDID_FEE=false
 fi
 
 node ./settlement-report/genSettlementReport \
@@ -40,6 +48,7 @@ node ./settlement-report/genSettlementReport \
   --config-timestamp=$CONFIG_TIMESTAMP \
   --bill-period-start="${BILL_PERIOD_START}" \
   --bill-period-end="${BILL_PERIOD_END}" \
+  --ndid-fee="${CAL_NDID_FEE}" \
   --tm-rpc-ip=$TM_RPC_IP \
   --tm-rpc-port=$TM_RPC_PORT \
   --next-round=./NextRound/ \
