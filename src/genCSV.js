@@ -389,6 +389,7 @@ async function genCSV(
   billPeriod,
   blockRange,
   version,
+  shouldCalculateNdidFee,
   outputCsvDirPath,
 ) {
   const reportFileNameFnBaseArg = {
@@ -705,13 +706,15 @@ async function genCSV(
     const rpNdidRows = allRows.rpNdid.filter(row =>
       row.rp_org_short_name === rpOrgShortName);
     const rpNumOfStamps = _.sum(rpNdidRows.map(row => row.numberOfStamps));
-    const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, rpOrgShortName, blockRange.min);
+    const rpPlan = shouldCalculateNdidFee
+      ? getRpPlanOfOrg(rpPlans, rpPlanDetails, rpOrgShortName, blockRange.min)
+      : { name: 'N/A' };
     const rpNdidSumByOrg = [{
       org: rpOrgShortName,
       rpPlan: rpPlan.name,
       numberOfTxns: rpNdidRows.length,
       numberOfStamps: rpNumOfStamps,
-      ndidPrice: rpPlan ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 'N/A',
+      ndidPrice: (shouldCalculateNdidFee && rpPlan) ? calculateNdidPrice(rpPlan, rpNumOfStamps) : '',
     }];
     const rpNdidSumByOrgFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: rpOrgShortName, rowCount: rpNdidSumByOrg.length, extension: 'csv',
@@ -957,6 +960,7 @@ async function genCSV(
     billPeriod,
     blockRange,
     version,
+    shouldCalculateNdidFee,
     outputCsvDirPath,
   );
 }
