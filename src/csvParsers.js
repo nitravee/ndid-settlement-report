@@ -497,7 +497,7 @@ const fieldsRpNdidSummaryByOrg = [
     value: 'numberOfStamps',
   }, {
     label: 'NDID Price',
-    value: row => (isNaN(row.ndidPrice) ? row.ndidPrice : Number(row.ndidPrice).toFixed(2)),
+    value: row => (isNaN(row.ndidPrice) ? `"${row.ndidPrice}"` : Number(row.ndidPrice).toFixed(2)),
     stringify: false,
   },
 ];

@@ -714,7 +714,7 @@ async function genCSV(
       rpPlan: rpPlan.name,
       numberOfTxns: rpNdidRows.length,
       numberOfStamps: rpNumOfStamps,
-      ndidPrice: (shouldCalculateNdidFee && rpPlan) ? calculateNdidPrice(rpPlan, rpNumOfStamps) : '',
+      ndidPrice: (shouldCalculateNdidFee && rpPlan) ? calculateNdidPrice(rpPlan, rpNumOfStamps) : 'N/A',
     }];
     const rpNdidSumByOrgFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: rpOrgShortName, rowCount: rpNdidSumByOrg.length, extension: 'csv',
