@@ -28,8 +28,8 @@ async function importPriceList(
     return undefined;
   }
 
-  const idpJsonArray = await csv().fromFile(idpPricePath);
-  const asJsonArray = await csv().fromFile(asPricePath);
+  const idpJsonArray = await csv({ flatKeys: true }).fromFile(idpPricePath);
+  const asJsonArray = await csv({ flatKeys: true }).fromFile(asPricePath);
 
   const mapping = JSON.parse(fs.readFileSync(orgToNodeIdMapPath, 'utf8'));
 
