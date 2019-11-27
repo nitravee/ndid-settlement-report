@@ -171,6 +171,8 @@ Bill period start: ${moment(billPeriod.start).format('D-MMM-YYYY HH:mm:ss')}
 Bill period end: ${moment(billPeriod.end).format('D-MMM-YYYY HH:mm:ss')}
 Min block height: ${minHeight}
 Max block height: ${maxHeight}
+Chain ID: ${chainId == null ? 'Not specific' : chainId}
+Calculate NDID fee: ${shouldCalculateNdidFee ? 'Yes' : 'No'}
 `,
   (err) => {
     if (err) {
