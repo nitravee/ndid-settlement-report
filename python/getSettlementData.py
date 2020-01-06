@@ -43,16 +43,26 @@ for height in range(start_block, end_block):
     json_block_result = urllib2.urlopen(
         'http://' + tm_rpc_domain + '/block_results?height=' + str(height)).read()
     block_result = json.loads(json_block_result)
+    newTMVersion = block_result['result']['results'].has_key('deliver_tx')
     if block['result']['block']['data']['txs'] is not None:
         index = 0
         for tx in block['result']['block']['data']['txs']:
             chkAttrSuccess = False
-            index2=0
-            for event in block_result['result']['results']['deliver_tx'][index]['events']:
-                for attr in block_result['result']['results']['deliver_tx'][index]['events'][index2]['attributes']:
-                    if base64.b64decode(attr['key']) == 'success' and base64.b64decode(attr['value']) == 'true':
+            if newTMVersion:
+                for event in block_result['result']['results'][
+                'deliver_tx'][index]['events']:
+                    index2=0
+                    for attr in block_result['result']['results'][
+                        'deliver_tx'][index]['events'][index2]['attributes']:
+                        if base64.b64decode(attr['key']) == 'success' and base64.b64decode(attr['value']) == 'true':
+                            chkAttrSuccess = True
+                        index2 += 1
+            else:
+                for tag in block_result['result']['results'][
+                'DeliverTx'][index]['tags']:
+                    if base64.b64decode(tag['key']) == 'success' and base64.b64decode(tag['value']) == 'true':
                         chkAttrSuccess = True
-                index2 += 1
+
             if chkAttrSuccess:
 
                 txObj = tendermint_pb2.Tx()
@@ -75,8 +85,15 @@ for height in range(start_block, end_block):
                 if 'as_id' in txParams:
                     row['as_id'] = txParams['as_id']
 
-                if 'data' in block_result['result']['results']['deliver_tx'][index]:
-                    row['request_id'] = base64.b64decode(block_result['result']['results']['deliver_tx'][index]['data'])
+                if newTMVersion:
+                    if 'data' in block_result['result']['results']['deliver_tx'][
+                        index]:
+                        row['request_id'] = base64.b64decode(block_result['result']['results']['deliver_tx'][index]['data'])
+                else:
+                    if 'data' in block_result['result']['results']['DeliverTx'][
+                        index]:
+                        row['request_id'] = base64.b64decode(block_result['result']['results']['DeliverTx'][index]['data'])
+                
 
                 func = 'GetPriceFunc'
                 param = {}
