@@ -2,13 +2,14 @@ const _ = require('lodash');
 const fs = require('fs');
 const mkpath = require('mkpath');
 const { join } = require('path');
+const del = require('del');
 const Json2csvParser = require('json2csv').Parser;
 const { genSummaryByOrgReport } = require('./genSummaryByOrgReport');
 const { reportFileName } = require('./utils/pathUtil');
 const { getRpPlanOfOrg } = require('./importRpPlans');
 const { calculateNdidPrice } = require('./calculateNdidPrice');
 const { getCollapsedOrgInfoInRange } = require('./getCollapsedOrgInfoInRange');
-const { getOrgShortNameList } = require('./getNodeIdToOrgMapping');
+const { getOrgShortNameList, UNKNOWN_ORG_SHORT_NAME } = require('./getNodeIdToOrgMapping');
 const {
   pendingParser,
   rpIdpParser,
@@ -434,6 +435,8 @@ async function genCSV(
   createFile(pendingParser.parse(allPendingReqRows), 'all_pending.csv', outputCsvDirPath);
   logFileCreated('all_pending.csv', outputCsvDirPath);
 
+  let haveUnknownNode = false;
+
   // #################################
   // Pending by Org
   // #################################
@@ -443,6 +446,10 @@ async function genCSV(
       .map(req => genRowsFromPendingRequest(req, nodeInfo))
       .reduce((prev, curr) => prev.concat(curr), [])
       .sort(heightCompare);
+
+    if (orgName === UNKNOWN_ORG_SHORT_NAME && orgPendingReqRows.length > 0) {
+      haveUnknownNode = true;
+    }
 
     const fileNameWithExt = reportFileName({
       billPeriodStart: billPeriod.start,
@@ -469,6 +476,11 @@ async function genCSV(
         rpIdp.push(row);
       }
     });
+
+    if (orgShortName === UNKNOWN_ORG_SHORT_NAME && rpIdp.length > 0) {
+      haveUnknownNode = true;
+    }
+
     const csv = rpIdpParser.parse(rpIdp.sort(heightCompare));
     const rpIdpFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: rpIdp.length, extension: 'csv',
@@ -499,6 +511,11 @@ async function genCSV(
     );
 
     const rpNdid = allRows.rpNdid.filter(row => id === row.rp_id).sort(heightCompare);
+
+    if (orgShortName === UNKNOWN_ORG_SHORT_NAME && rpNdid.length > 0) {
+      haveUnknownNode = true;
+    }
+
     const rpNdidCsv = rpNdidParser.parse(rpNdid);
     const rpNdidFileNameWithExt = reportFileName(Object.assign(
       {},
@@ -734,6 +751,11 @@ async function genCSV(
         idpRp.push(row);
       }
     });
+
+    if (orgShortName === UNKNOWN_ORG_SHORT_NAME && idpRp.length > 0) {
+      haveUnknownNode = true;
+    }
+
     const csv = rpIdpParser.parse(idpRp.sort(heightCompare));
     const idpRpFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: idpRp.length, extension: 'csv',
@@ -823,6 +845,11 @@ async function genCSV(
         rpAs.push(row);
       }
     });
+
+    if (orgShortName === UNKNOWN_ORG_SHORT_NAME && rpAs.length > 0) {
+      haveUnknownNode = true;
+    }
+
     const csv = rpAsParser.parse(rpAs.sort(heightCompare));
     const rpAsFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: rpAs.length, extension: 'csv',
@@ -864,6 +891,11 @@ async function genCSV(
         asRp.push(row);
       }
     });
+
+    if (orgShortName === UNKNOWN_ORG_SHORT_NAME && asRp.length > 0) {
+      haveUnknownNode = true;
+    }
+
     const csv = rpAsParser.parse(asRp.sort(heightCompare));
     const asRpFileNameWithExt = reportFileName({
       ...reportFileNameFnBaseArg, reportIdentifier: id, rowCount: asRp.length, extension: 'csv',
@@ -963,6 +995,12 @@ async function genCSV(
     shouldCalculateNdidFee,
     outputCsvDirPath,
   );
+
+  if (!haveUnknownNode) {
+    const toDelPath = join(outputCsvDirPath, `${'UNKNOWN'}`);
+    await del([toDelPath], { force: true });
+    console.log(`Delete ${toDelPath} since there is no unknown node`);
+  }
 }
 
 module.exports.genCSV = genCSV;
