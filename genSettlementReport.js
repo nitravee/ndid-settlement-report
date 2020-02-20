@@ -6,6 +6,7 @@ const moment = require('moment');
 const config = require('./config');
 const { importBlockchainQueryData } = require('./src/importBlockchainQueryData');
 const { importPriceListDirectories, getPriceCategories } = require('./src/importPriceList');
+const { importOrgInfo } = require('./src/importOrgInfo');
 const { importRpGroups } = require('./src/importRpGroups');
 const { importRpPlans, importRpPlanDetails } = require('./src/importRpPlans');
 const { importPreviousPendingRequests } = require('./src/importPreviousPendingRequests');
@@ -30,6 +31,7 @@ let usedTokenReportDirPath = path.resolve(__dirname, './data/GetUsedTokenReport'
 let requestDetailDirPath = path.resolve(__dirname, './data/RequestDetail');
 let prevPendingReqsPath = path.resolve(__dirname, './data/previousPendingRequests.json');
 let pricesDirPath = path.resolve(__dirname, './data/Prices');
+let orgInfoDirPath = path.resolve(__dirname, './data/OrgInfo');
 let groupDirPath = path.resolve(__dirname, './data/Group');
 let planDirPath = path.resolve(__dirname, './data/Plan');
 let planDetailDirPath = path.resolve(__dirname, './data/PlanDetail');
@@ -58,6 +60,9 @@ if (argv.v) {
 }
 if (argv.p) {
   pricesDirPath = path.resolve(currWorkingPath, argv.p);
+}
+if (argv.i) {
+  orgInfoDirPath = path.resolve(currWorkingPath, argv.i);
 }
 if (argv.g) {
   groupDirPath = path.resolve(currWorkingPath, argv.g);
@@ -139,6 +144,7 @@ console.log(`RequestDetail Dir: ${requestDetailDirPath || 'Not specific'}`);
 console.log(`Prices Dir: ${pricesDirPath || 'Not specific'}`);
 console.log(`Group Dir: ${groupDirPath || 'Not specific'}`);
 console.log(`Plan Dir: ${planDirPath || 'Not specific'}`);
+console.log(`Org Info Dir: ${orgInfoDirPath || 'Not specific'}`);
 console.log(`pendingRequests.json Path: ${prevPendingReqsPath || 'Not specific'}`);
 console.log(`Output Dir: ${outputDirPath || 'Not specific'}`);
 console.log(`Web Portal Dir: ${webPortalDirPath || 'Not specific'}`);
@@ -181,65 +187,67 @@ Calculate NDID fee: ${shouldCalculateNdidFee ? 'Yes' : 'No'}
   },
 );
 
-importPriceListDirectories(path.join(pricesDirPath, chainId))
-  .then(async ({ orgs: orgInfo, prices: priceList }) => {
-    const priceCategories = getPriceCategories(priceList);
-    const nodeIdToOrgMapping = getNodeIdToOrgMapping(orgInfo);
-    console.log('\nImporting price list succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './orgInfo.json'), JSON.stringify(orgInfo, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: orgInfo.json', err);
-        }
-      });
-      fs.writeFile(path.resolve(debugFileDirPath, './nodeIdToOrgMapping.json'), JSON.stringify(nodeIdToOrgMapping, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: nodeIdToOrgMapping.json', err);
-        }
-      });
-      fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: priceList.json', err);
-        }
-      });
-      fs.writeFile(path.resolve(debugFileDirPath, './priceCategories.json'), JSON.stringify(priceCategories, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: priceCategories.json', err);
-        }
-      });
-    }
+async function performProcess() {
+  const orgInfo = importOrgInfo(path.join(orgInfoDirPath, chainId));
+  const { prices: priceList } = await importPriceListDirectories(path.join(pricesDirPath, chainId), orgInfo);
 
-    const rpGroups = importRpGroups(path.join(groupDirPath, chainId));
-    console.log('\nImporting RP groups succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './rpGroups.json'), JSON.stringify(rpGroups, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: rpGroups.json', err);
-        }
-      });
-    }
-
-    let rpPlanDetails;
-    if (shouldCalculateNdidFee) {
-      rpPlanDetails = importRpPlanDetails(
-        path.join(planDetailDirPath, chainId),
-        minHeight,
-        maxHeight,
-        configTimestamp,
-      );
-      console.log('Importing RP plan details succeeded.');
-      if (enableDebugFile) {
-        fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
-          if (err) {
-            console.warn('Failed to write debug file: rpPlanDetails.json', err);
-          }
-        });
+  const priceCategories = getPriceCategories(priceList);
+  const nodeIdToOrgMapping = getNodeIdToOrgMapping(orgInfo);
+  console.log('\nImporting price list succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './orgInfo.json'), JSON.stringify(orgInfo, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: orgInfo.json', err);
       }
-    }
+    });
+    fs.writeFile(path.resolve(debugFileDirPath, './nodeIdToOrgMapping.json'), JSON.stringify(nodeIdToOrgMapping, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: nodeIdToOrgMapping.json', err);
+      }
+    });
+    fs.writeFile(path.resolve(debugFileDirPath, './priceList.json'), JSON.stringify(priceList, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: priceList.json', err);
+      }
+    });
+    fs.writeFile(path.resolve(debugFileDirPath, './priceCategories.json'), JSON.stringify(priceCategories, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: priceCategories.json', err);
+      }
+    });
+  }
 
-    let rpPlans;
-    if (shouldCalculateNdidFee) {
-      rpPlans =
+  const rpGroups = importRpGroups(path.join(groupDirPath, chainId));
+  console.log('\nImporting RP groups succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './rpGroups.json'), JSON.stringify(rpGroups, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: rpGroups.json', err);
+      }
+    });
+  }
+
+  let rpPlanDetails;
+  if (shouldCalculateNdidFee) {
+    rpPlanDetails = importRpPlanDetails(
+      path.join(planDetailDirPath, chainId),
+      minHeight,
+      maxHeight,
+      configTimestamp,
+    );
+    console.log('Importing RP plan details succeeded.');
+    if (enableDebugFile) {
+      fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
+        if (err) {
+          console.warn('Failed to write debug file: rpPlanDetails.json', err);
+        }
+      });
+    }
+  }
+
+  let rpPlans;
+  if (shouldCalculateNdidFee) {
+    rpPlans =
         importRpPlans(
           planDirPath,
           rpPlanDetails,
@@ -249,166 +257,168 @@ importPriceListDirectories(path.join(pricesDirPath, chainId))
           configTimestamp,
           config.mktNameToWebPortalOrgDirNameMapping,
         );
-      console.log('Importing RP plans succeeded.');
-      if (enableDebugFile) {
-        fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
-          if (err) {
-            console.warn('Failed to write debug file: rpPlans.json', err);
-          }
-        });
-      }
-    }
-
-    const prevPendingReqs = importPreviousPendingRequests(prevPendingReqsPath);
-    console.log('Importing previous pending requests succeeded.');
+    console.log('Importing RP plans succeeded.');
     if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './previousPendingRequests.json'), JSON.stringify(prevPendingReqs, null, 2), (err) => {
+      fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
         if (err) {
-          console.warn('Failed to write debug file: previousPendingRequests.json', err);
+          console.warn('Failed to write debug file: rpPlans.json', err);
         }
       });
     }
+  }
 
-    const importedReqData = importBlockchainQueryData(
-      usedTokenReportDirPath,
-      requestDetailDirPath,
-      minHeight,
-      maxHeight,
-    );
-    console.log('Importing blockchain query data succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(importedReqData, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: queryDataJson.json', err);
-        }
-      });
-    }
-
-    const reqData = mergePrevPendingReqsToCurrReqs(importedReqData, prevPendingReqs);
-    Object.keys(reqData).forEach((reqId) => {
-      if (reqData[reqId].detail == null) {
-        delete reqData[reqId];
+  const prevPendingReqs = importPreviousPendingRequests(prevPendingReqsPath);
+  console.log('Importing previous pending requests succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './previousPendingRequests.json'), JSON.stringify(prevPendingReqs, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: previousPendingRequests.json', err);
       }
     });
-    console.log('Importing blockchain query data succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './mergedReqData.json'), JSON.stringify(reqData, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: mergedReqData.json', err);
-        }
-      });
-    }
+  }
 
-    const categorizedReqs = categorizeRequests(reqData, nodeIdToOrgMapping, minHeight, maxHeight);
-    console.log('Calculating settlement succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: settlement.json', err);
-        }
-      });
-    }
+  const importedReqData = importBlockchainQueryData(
+    usedTokenReportDirPath,
+    requestDetailDirPath,
+    minHeight,
+    maxHeight,
+  );
+  console.log('Importing blockchain query data succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './queryDataJson.json'), JSON.stringify(importedReqData, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: queryDataJson.json', err);
+      }
+    });
+  }
 
-    const settlementWithPrice =
+  const reqData = mergePrevPendingReqsToCurrReqs(importedReqData, prevPendingReqs);
+  Object.keys(reqData).forEach((reqId) => {
+    if (reqData[reqId].detail == null) {
+      delete reqData[reqId];
+    }
+  });
+  console.log('Importing blockchain query data succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './mergedReqData.json'), JSON.stringify(reqData, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: mergedReqData.json', err);
+      }
+    });
+  }
+
+  const categorizedReqs = categorizeRequests(reqData, nodeIdToOrgMapping, minHeight, maxHeight);
+  console.log('Calculating settlement succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './categorizedRequests.json'), JSON.stringify(categorizedReqs, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: settlement.json', err);
+      }
+    });
+  }
+
+  const settlementWithPrice =
       calculateSettlementInfo(categorizedReqs, priceList, rpGroups);
-    console.log('Calculating price for settlement succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: settlementWithPrice.json', err);
-        }
-      });
-    }
+  console.log('Calculating price for settlement succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './settlementWithPrice.json'), JSON.stringify(settlementWithPrice, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: settlementWithPrice.json', err);
+      }
+    });
+  }
 
-    let nodeInfo;
-    if (nodeInfoJsonFilePath) {
-      nodeInfo = JSON.parse(fs.readFileSync(nodeInfoJsonFilePath));
-    } else {
-      nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
-        .values(settlementWithPrice.finishedRequests)
-        .concat(Object.values(settlementWithPrice.pendingRequests))
-        .map(req => req.settlement)));
-      console.log('Querying node info succeeded.');
-    }
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: nodeInfo.json', err);
-        }
-      });
-    }
+  let nodeInfo;
+  if (nodeInfoJsonFilePath) {
+    nodeInfo = JSON.parse(fs.readFileSync(nodeInfoJsonFilePath));
+  } else {
+    nodeInfo = await queryNodeInfo(getNodeIdsFromSettlements(Object
+      .values(settlementWithPrice.finishedRequests)
+      .concat(Object.values(settlementWithPrice.pendingRequests))
+      .map(req => req.settlement)));
+    console.log('Querying node info succeeded.');
+  }
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './nodeInfo.json'), JSON.stringify(nodeInfo, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: nodeInfo.json', err);
+      }
+    });
+  }
 
-    // Generate pending requests JSON file
-    const pendingReqsJsonPath = path.join(outputDirPath, './pendingRequests.json');
-    fs.writeFileSync(
-      pendingReqsJsonPath,
-      JSON.stringify(categorizedReqs.pendingRequests, null, 2),
-      (err) => {
-        if (err) {
-          throw err;
-        }
-      },
+  // Generate pending requests JSON file
+  const pendingReqsJsonPath = path.join(outputDirPath, './pendingRequests.json');
+  fs.writeFileSync(
+    pendingReqsJsonPath,
+    JSON.stringify(categorizedReqs.pendingRequests, null, 2),
+    (err) => {
+      if (err) {
+        throw err;
+      }
+    },
+  );
+  console.log(`\npendingRequest.json created at ${outputDirPath}`);
+
+  const outputCsvDirPath = path.join(outputDirPath, 'csv');
+  await genCSV(
+    settlementWithPrice,
+    nodeInfo,
+    orgInfo,
+    priceCategories,
+    rpPlans,
+    rpPlanDetails,
+    billPeriod,
+    { min: minHeight, max: maxHeight },
+    ver,
+    shouldCalculateNdidFee,
+    outputCsvDirPath,
+  );
+  console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
+
+  if (webPortalDirPath) {
+    await copyReportsToWebPortalDir(
+      outputDirPath,
+      webPortalDirPath,
+      webPortalSubDirs,
+      config.mktNameToWebPortalOrgDirNameMapping,
+      createLatest,
     );
-    console.log(`\npendingRequest.json created at ${outputDirPath}`);
+    console.log('Copying report files to web portal directory succeeded');
+  } else {
+    console.log('Copying report files to web portal directory skipped');
+  }
 
-    const outputCsvDirPath = path.join(outputDirPath, 'csv');
-    await genCSV(
-      settlementWithPrice,
-      nodeInfo,
-      orgInfo,
-      priceCategories,
-      rpPlans,
-      rpPlanDetails,
-      billPeriod,
-      { min: minHeight, max: maxHeight },
-      ver,
-      shouldCalculateNdidFee,
-      outputCsvDirPath,
-    );
-    console.log(`\nSettlement report (.csv) files have been created at ${outputCsvDirPath}`);
+  const thisRoundDirPath = path.join(outputDirPath, 'this-round');
+  writeRoundFiles(
+    chainId,
+    minHeight,
+    maxHeight,
+    billPeriod.start,
+    billPeriod.end,
+    prevPendingReqsPath,
+    thisRoundDirPath,
+    {
+      outputRoundInfoJsonFileName: 'thisRound.json',
+    },
+  );
+  console.log('\nWriting this-round files succeeded');
 
-    if (webPortalDirPath) {
-      await copyReportsToWebPortalDir(
-        outputDirPath,
-        webPortalDirPath,
-        webPortalSubDirs,
-        config.mktNameToWebPortalOrgDirNameMapping,
-        createLatest,
-      );
-      console.log('Copying report files to web portal directory succeeded');
-    } else {
-      console.log('Copying report files to web portal directory skipped');
-    }
-
-    const thisRoundDirPath = path.join(outputDirPath, 'this-round');
+  if (nextRoundDirPath) {
     writeRoundFiles(
       chainId,
-      minHeight,
-      maxHeight,
-      billPeriod.start,
+      maxHeight + 1,
+      null,
       billPeriod.end,
-      prevPendingReqsPath,
-      thisRoundDirPath,
-      {
-        outputRoundInfoJsonFileName: 'thisRound.json',
-      },
+      null,
+      pendingReqsJsonPath,
+      nextRoundDirPath,
     );
-    console.log('\nWriting this-round files succeeded');
+    console.log('\nWriting next-round files succeeded');
+  } else {
+    console.log('\nWriting next-round files skipped');
+  }
 
-    if (nextRoundDirPath) {
-      writeRoundFiles(
-        chainId,
-        maxHeight + 1,
-        null,
-        billPeriod.end,
-        null,
-        pendingReqsJsonPath,
-        nextRoundDirPath,
-      );
-      console.log('\nWriting next-round files succeeded');
-    } else {
-      console.log('\nWriting next-round files skipped');
-    }
+  console.log('\nGenerating settlement reports succeeded.');
+}
 
-    console.log('\nGenerating settlement reports succeeded.');
-  });
+performProcess();

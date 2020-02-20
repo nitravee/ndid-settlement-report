@@ -28,5 +28,6 @@ services:
       - ${PENDING_REQS_PATH:-./settlement/NextRound/pendingRequests.json}:/pendingRequests.json
       - ${WEB_PORTAL_DIR:-./settlement/WebPortal}:/WebPortal
       - ${PRICES_DIR:-./settlement/Prices}:/Prices
+      - ${ORG_INFO_DIR:-./settlement/OrgInfo}:/OrgInfo
       - ${NEXT_ROUND_DIR:-./settlement/NextRound}:/NextRound
     network_mode: "host"

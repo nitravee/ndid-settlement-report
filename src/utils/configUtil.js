@@ -14,6 +14,18 @@ function getHeightDependentConfig(configList, height, configKey) {
   return configKey ? filteredList[0][configKey] : filteredList[0];
 }
 
+function getHeightDependentConfigsOverlappingHeightRange(configList, minHeight, maxHeight) {
+  const filteredList = configList
+    .filter((entry) => {
+      if ((entry.max_block_height != null && entry.max_block_height < minHeight) ||
+        (entry.min_block_height > maxHeight && maxHeight != null)) {
+        return false;
+      }
+      return true;
+    });
+  return filteredList;
+}
+
 function compareMonthYear(a, b) {
   if (a.year < b.year) { return -1; }
   if (a.year > b.year) { return 1; }
@@ -121,6 +133,7 @@ function selectConfigHeightByTimestamp(sortedConfigHeights = [], configTimestamp
 
 module.exports = {
   getHeightDependentConfig,
+  getHeightDependentConfigsOverlappingHeightRange,
   getMonthYearDependentConfig,
   compareMonthYear,
   getConfigHeight,
