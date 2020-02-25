@@ -1,6 +1,6 @@
 {
   "name": "ndid-settlement-report",
-  "version": "1.2.5",
+  "version": "1.3.2",
   "description": "NDID Settlement Report Generator",
   "main": "index.js",
   "scripts": {

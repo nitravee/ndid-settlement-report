@@ -1,7 +1,7 @@
 version: '3'
 services:
   settlement-report:
-    image: prapatb/ndid-settlement-report:1.2.5
+    image: prapatb/ndid-settlement-report:1.3.2
     environment: 
       - TM_RPC_IP=${TM_RPC_IP:-127.0.0.1}
       - TM_RPC_PORT=${TM_RPC_PORT:-45000}

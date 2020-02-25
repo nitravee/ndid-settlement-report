@@ -4,4 +4,4 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    image: prapatb/ndid-settlement-report:1.2.5
+    image: prapatb/ndid-settlement-report:1.3.2
