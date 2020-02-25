@@ -49,12 +49,13 @@ function importRpPlans(
       .filter(confHeight => isFinite(confHeight.height))
       .sort(compareConfigHeight);
 
+    // NOTE: Temporarily bypass height validation for now
     // Validate height
-    const outOfRangeMinHeights = minConfigHeights
-      .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
-    if (outOfRangeMinHeights.length > 0) {
-      throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
-    }
+    // const outOfRangeMinHeights = minConfigHeights
+    //   .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
+    // if (outOfRangeMinHeights.length > 0) {
+    //   throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
+    // }
 
     // Filter with config timestamp
     const filteredMinConfigHeights = [];
@@ -102,12 +103,13 @@ function importRpPlanDetails(planDetailDirPath, minBlockHeight, maxBlockHeight, 
     .filter(confHeight => isFinite(confHeight.height))
     .sort(compareConfigHeight);
 
+  // NOTE: Temporarily bypass height validation for now
   // Validate height
-  const outOfRangeMinHeights = minConfigHeights
-    .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
-  if (outOfRangeMinHeights.length > 0) {
-    throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
-  }
+  // const outOfRangeMinHeights = minConfigHeights
+  //   .filter(h => h.height > minBlockHeight && h.height <= maxBlockHeight);
+  // if (outOfRangeMinHeights.length > 0) {
+  //   throw new Error(`Invalid RP plan config. Config height (${outOfRangeMinHeights.join(',')}) must not be in range (min_block_height=${minBlockHeight}, max_block_height=${maxBlockHeight}].`);
+  // }
 
   // Filter with config timestamp
   const filteredMinConfigHeights = [];

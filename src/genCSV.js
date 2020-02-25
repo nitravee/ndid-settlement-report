@@ -723,9 +723,8 @@ async function genCSV(
     const rpNdidRows = allRows.rpNdid.filter(row =>
       row.rp_org_short_name === rpOrgShortName);
     const rpNumOfStamps = _.sum(rpNdidRows.map(row => row.numberOfStamps));
-    const rpPlan = shouldCalculateNdidFee
-      ? getRpPlanOfOrg(rpPlans, rpPlanDetails, rpOrgShortName, blockRange.min)
-      : { name: 'N/A' };
+    
+    const rpPlan = getRpPlanOfOrg(rpPlans, rpPlanDetails, rpOrgShortName, blockRange.min);    
     const rpNdidSumByOrg = [{
       org: rpOrgShortName,
       rpPlan: rpPlan.name,

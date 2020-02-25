@@ -228,43 +228,39 @@ async function performProcess() {
   }
 
   let rpPlanDetails;
-  if (shouldCalculateNdidFee) {
-    rpPlanDetails = importRpPlanDetails(
-      path.join(planDetailDirPath, chainId),
-      minHeight,
-      maxHeight,
-      configTimestamp,
-    );
-    console.log('Importing RP plan details succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: rpPlanDetails.json', err);
-        }
-      });
-    }
+  rpPlanDetails = importRpPlanDetails(
+    path.join(planDetailDirPath, chainId),
+    minHeight,
+    maxHeight,
+    configTimestamp,
+  );
+  console.log('Importing RP plan details succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './rpPlanDetails.json'), JSON.stringify(rpPlanDetails, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: rpPlanDetails.json', err);
+      }
+    });
   }
 
   let rpPlans;
-  if (shouldCalculateNdidFee) {
-    rpPlans =
-        importRpPlans(
-          planDirPath,
-          rpPlanDetails,
-          chainId,
-          minHeight,
-          maxHeight,
-          configTimestamp,
-          config.mktNameToWebPortalOrgDirNameMapping,
-        );
-    console.log('Importing RP plans succeeded.');
-    if (enableDebugFile) {
-      fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
-        if (err) {
-          console.warn('Failed to write debug file: rpPlans.json', err);
-        }
-      });
-    }
+  rpPlans =
+      importRpPlans(
+        planDirPath,
+        rpPlanDetails,
+        chainId,
+        minHeight,
+        maxHeight,
+        configTimestamp,
+        config.mktNameToWebPortalOrgDirNameMapping,
+      );
+  console.log('Importing RP plans succeeded.');
+  if (enableDebugFile) {
+    fs.writeFile(path.resolve(debugFileDirPath, './rpPlans.json'), JSON.stringify(rpPlans, null, 2), (err) => {
+      if (err) {
+        console.warn('Failed to write debug file: rpPlans.json', err);
+      }
+    });
   }
 
   const prevPendingReqs = importPreviousPendingRequests(prevPendingReqsPath);
